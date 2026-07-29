@@ -1,0 +1,10 @@
+#!/bin/env zsh
+
+echo "sourcing env"
+export _root_="$( dirname -- $( dirname -- $(dirname -- $(realpath ${(%):-%N}))))"
+export _session_id_="$(uuidgen)"
+export _log_dir_="/dev/shm/logger"
+export SILENT_LOG=1
+export LOGERROR=1
+
+

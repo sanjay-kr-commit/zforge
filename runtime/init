@@ -1,0 +1,10 @@
+#!/bin/env zsh
+
+source $(dirname -- $(realpath ${(%):-%N}))/initialize/env 
+source $_root_/runtime/initialize/init_logger
+
+echo "root dir : $_root_" | debug
+echo "session id : $_session_id_" | debug
+echo "$_session_id_" 
+
+source $_root_/runtime/check_cache

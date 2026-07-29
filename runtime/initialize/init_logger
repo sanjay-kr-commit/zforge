@@ -1,0 +1,61 @@
+#!/bin/env zsh
+
+echo "init logger"
+RED="\e[1;31m"
+YELLOW="\e[1;33m"
+BLUE="\e[1;34m"
+RESET="\e[0m"
+mkdir -p $_log_dir_
+
+if [[ -v SILENT_LOG ]]; then
+  touch $_log_dir_/$_session_id_
+  exec {logger}> "$_log_dir_/$_session_id_"
+fi
+
+on_logger_exit() {
+  echo "Script finished! Running post-script task..."
+  if [[ -f "$_log_dir_/$_session_id_" && -v SILENT_LOG ]]; then
+    exec {logger}>&-
+    # rm $_log_dir_/$_session_id_
+  fi
+}
+
+trap on_logger_exit EXIT INT TERM
+
+:log() {
+  echo $SILENT_LOG_ARR | less
+}
+
+export error() {
+  local input=$(cat)
+  if [[ -v LOGERROR ]] ; then
+    if [[ -v SILENT_LOG ]] ; then
+      printf "${RED}[ERROR]${RESET} %s\n" "$input" >&$logger
+    else
+      printf "${RED}[ERROR]${RESET} %s\n" "$input" >&2
+    fi
+  fi
+}
+
+export warn() {
+  local input=$(cat)
+  if [[ -v LOGERROR ]] || [[ -v LOGWARN ]] ; then
+    if [[ -v SILENT_LOG ]] ; then
+      printf "${YELLOW}[WARN]${RESET} %s\n" "$input" >&$logger
+    else
+      printf "${YELLOW}[WARN]${RESET} %s\n"  "$input" >&2
+    fi
+  fi
+}
+
+export debug() {
+  local input=$(cat)
+  if [[ -v LOGERROR ]] || [[ -v LOGWARN ]] || [[ -v LOGDEBUG ]] ; then
+    if [[ -v SILENT_LOG ]] ; then
+      printf "${BLUE}[DEBUG]${RESET} %s\n" "$input" >&$logger
+    else
+      printf "${BLUE}[DEBUG]${RESET} %s\n" "$input" 
+    fi
+  fi
+}
+
