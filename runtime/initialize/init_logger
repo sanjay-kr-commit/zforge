@@ -23,7 +23,7 @@ on_logger_exit() {
 trap on_logger_exit EXIT INT TERM
 
 :log() {
-  echo $SILENT_LOG_ARR | less
+   cat "$_log_dir_/$_session_id_" | less
 }
 
 export error() {
