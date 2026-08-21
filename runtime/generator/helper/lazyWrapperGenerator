@@ -1,0 +1,15 @@
+#!/bin/env zsh
+
+[[ $ZSH_EVAL_CONTEXT != *:file* ]] || { echo "Don't source this file" ; return 1}
+(( $# == 1 )) || { echo "Pass a file name"; exit 1; }
+[[ -f $1 ]] || { echo "File not found"; exit 1; }
+
+rp=$(realpath "$1")
+rp=${rp/#$HOME/\$HOME}
+
+while IFS= read -r function; do
+    print -r -- "$function(){ unfunction $function; source \"$rp\"; $function \"\$@\"; }"
+done < <(
+    grep -E '^[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
+    sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//'
+)
