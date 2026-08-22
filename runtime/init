@@ -9,10 +9,14 @@ echo "$_session_id_"
 
 source $_dot_bootstrap_root_/runtime/fingerprint/main
 
-source $_dot_bootstrap_root_/runtime/check_cache
-
 source $_dot_bootstrap_root_/runtime/loaders/loadCommands
  
+if [[ -f "$_dot_bootstrap_root_/cache/init" ]]; then
+  source "$_dot_bootstrap_root_/cache/init"
+else
+  echo "[init] $_dot_bootstrap_root_/cache/init not found" | error
+fi
+
 if [[ $1 == "--log" ]]; then
   :log
 fi

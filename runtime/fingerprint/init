@@ -1,0 +1,7 @@
+#!/bin/env zsh
+
+local caller="$ZSH_EVAL_CONTEXT"
+echo "sleeping"
+sleep 5
+echo "woke" 
+
