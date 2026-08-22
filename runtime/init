@@ -7,8 +7,9 @@ echo "root dir : $_dot_bootstrap_root_" | debug
 echo "session id : $_session_id_" | debug
 echo "$_session_id_" 
 
-source $_dot_bootstrap_root_/runtime/check_cache
+source $_dot_bootstrap_root_/runtime/fingerprint/main
 
+source $_dot_bootstrap_root_/runtime/check_cache
 
 source $_dot_bootstrap_root_/runtime/loaders/loadCommands
  

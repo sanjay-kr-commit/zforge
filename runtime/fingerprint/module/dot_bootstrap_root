@@ -1,0 +1,37 @@
+#!/bin/env zsh
+
+if [[ $ZSH_EVAL_CONTEXT == "toplevel" || $caller == "toplevel" ]] ; then
+  debug() { var=$(cat) ;echo "$var"}
+  warn() { var=$(cat) ;echo "$var"}
+  error() { var=$(cat) ;echo "$var"}
+fi
+
+echo "[fingerprint/dot_bootstrap_root] entered process" | debug
+if [[ ! -d $_dot_bootstrap_root_/cache ]] ; then
+  echo "[fingerprint/dot_bootstrap_root] cache doesn't exists" | debug
+  if [[ $ZSH_EVAL_CONTEXT == *:file* ]] ; then
+    return 1
+  else
+    exit
+  fi
+fi
+
+if [[ ! -f $_dot_bootstrap_root_/cache/cwd ]] ; then
+  echo "[fingerprint/dot_bootstrap_root] cwd file doesn't exists" | debug
+  if [[ $ZSH_EVAL_CONTEXT == *:file* ]] ; then
+    return 1
+  else
+    exit
+  fi
+fi
+
+local _root_cwd="$(cat $_dot_bootstrap_root_/cache/cwd)"
+if [[ $_root_cwd == "$_dot_bootstrap_root_" ]] ; then
+  echo "[fingerprint/dot_bootstrap_root] dotfile directory moved from $_root_cwd to $_dot_bootstrap_root_" | warn
+  rm -r $_dot_bootstrap_root_/cache
+  if [[ $ZSH_EVAL_CONTEXT == *:file* ]] ; then
+    return 1
+  else
+    exit
+  fi
+fi
