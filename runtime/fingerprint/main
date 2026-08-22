@@ -1,10 +1,12 @@
 #!/bin/env zsh
 
-echo "[fingerprint/main] entered process" | debug
+source $_dot_bootstrap_root_/runtime/fingerprint/cwd_change
+
 if [[ -d $_dot_bootstrap_root_/cache ]] ; then
   echo "[fingerprint/main] cache exists : revalidating in background" | debug 
   source "$_dot_bootstrap_root_/runtime/fingerprint/init" &!
 else 
   echo "[fingerprint/main] cache doesn't exists : generating cache" | error
+  echo "[fingerprint/main] cache doesn't exists : generating cache"
   source "$_dot_bootstrap_root_/runtime/fingerprint/init" 
 fi

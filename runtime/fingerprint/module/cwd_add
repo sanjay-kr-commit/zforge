@@ -1,0 +1,4 @@
+#!/bin/env zsh
+
+[[ -d $_dot_bootstrap_root_/cache ]] || { mkdir $_dot_bootstrap_root_/cache }
+[[ -f $_dot_bootstrap_root_/cache/cwd ]] || { echo "$_dot_bootstrap_root_" > $_dot_bootstrap_root_/cache/cwd  }
