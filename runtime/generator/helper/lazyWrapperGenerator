@@ -7,9 +7,10 @@
 rp=$(realpath "$1")
 rp=${rp/#$HOME/\$HOME}
 
+funcs="$(grep -E '^[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
+  sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//')"
+unfunc="$( echo $funcs | sed -e 's/\(.*\)/unfunction \1;/' | tr '\n' ' ' )"
+
 while IFS= read -r function; do
-    print -r -- "$function(){ unfunction $function; source \"$rp\"; $function \"\$@\"; }"
-done < <(
-    grep -E '^[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
-    sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//'
-)
+    print -r -- "$function(){ $unfunc source \"$rp\"; $function \"\$@\"; }"
+done < <( echo $funcs )
