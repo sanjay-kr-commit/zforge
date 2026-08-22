@@ -1,0 +1,9 @@
+#!/bin/env zsh
+
+[[ ! -f $_dot_bootstrap_root_/cache/shell_api_stub ]] || rm $_dot_bootstrap_root_/cache/shell_api_stub 
+
+echo "# $livehash" > $_dot_bootstrap_root_/cache/shell_api_stub 
+
+for file in $_dot_bootstrap_root_/runtime/shell_api/* ; do 
+  $_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator $file  >> $_dot_bootstrap_root_/cache/shell_api_stub
+done

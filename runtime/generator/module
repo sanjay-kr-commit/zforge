@@ -1,0 +1,5 @@
+#!/bin/env zsh
+
+[[ -d $_dot_bootstrap_root_/cache/$_session_id_ ]] || mkdir -p $_dot_bootstrap_root_/cache/$_session_id_
+
+

@@ -1,8 +1,9 @@
 #!/bin/env zsh
 
-local caller="$ZSH_EVAL_CONTEXT"
-local newVersion="$(uuidgen)"
-state=""
-
+source $_dot_bootstrap_root_/runtime/fingerprint/module/shell_api_stub
 source $_dot_bootstrap_root_/runtime/fingerprint/module/cwd_add
 source $_dot_bootstrap_root_/runtime/fingerprint/module/hash_module
+
+[[ -z $state ]] || {
+  echo "[fingerprint/init] state changes : \"$state\"" | debug
+}

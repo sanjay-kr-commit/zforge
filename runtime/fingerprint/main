@@ -1,6 +1,7 @@
 #!/bin/env zsh
 
 source $_dot_bootstrap_root_/runtime/fingerprint/cwd_change
+local state=""
 
 if [[ -d $_dot_bootstrap_root_/cache ]] ; then
   echo "[fingerprint/main] cache exists : revalidating in background" | debug 
