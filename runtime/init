@@ -1,5 +1,8 @@
 #!/bin/env zsh
 
+zmodload zsh/datetime
+local _init_start=$EPOCHREALTIME
+
 source $(dirname -- $(realpath ${(%):-%N}))/initialize/env 
 source $_dot_bootstrap_root_/runtime/initialize/init_logger
 
@@ -12,10 +15,14 @@ source $_dot_bootstrap_root_/runtime/fingerprint/main
 source $_dot_bootstrap_root_/runtime/loaders/load_shell_api
  
 if [[ -f "$_dot_bootstrap_root_/cache/init" ]]; then
-  source "$_dot_bootstrap_root_/cache/init"
+   #source "$_dot_bootstrap_root_/cache/init"
 else
   echo "[init] cache/init not found" | error
 fi
+
+local _init_end=$EPOCHREALTIME
+printf '[init] foreground time %.3f ms\n' "$(( (_init_end - _init_start) * 1000 ))" | debug
+
 
 if [[ $1 == "--log" ]]; then
   :log

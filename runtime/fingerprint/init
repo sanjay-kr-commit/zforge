@@ -1,9 +1,31 @@
 #!/bin/env zsh
 
-source $_dot_bootstrap_root_/runtime/fingerprint/module/shell_api_stub
-source $_dot_bootstrap_root_/runtime/fingerprint/module/cwd_add
-source $_dot_bootstrap_root_/runtime/fingerprint/module/hash_module
+local generation_error=""
 
-[[ -z $state ]] || {
+modules_arr=(
+  $_dot_bootstrap_root_/runtime/fingerprint/module/shell_api_stub
+  $_dot_bootstrap_root_/runtime/fingerprint/module/cwd_add
+  $_dot_bootstrap_root_/runtime/fingerprint/module/hash_module
+)
+
+for module in ${modules_arr[@]} ; do 
+  source $module
+  [[ -z $generation_error ]] || {
+    echo "[fingerprint/init] module generation failed" | error
+    echo "[fingerprint/init] at $module" | error
+    echo "[fingerprint/init] due to \"$generation_error\"" | error
+    [[ ! -d $_dot_bootstrap_root_/cache/$_session_id_ ]] || rm -r $_dot_bootstrap_root_/cache/$_session_id_
+  }
+done
+
+if [[ -z $generation_error && ! -z $state ]] ; then
   echo "[fingerprint/init] state changes : \"$state\"" | debug
-}
+  echo "[fingerprint/init] TODO state transition : \"$state\"" | debug
+fi
+
+if [[ -v _fingerprint_main_start ]] ; then
+  local _fingerprint_main_end=$EPOCHREALTIME
+  printf '[fingerprint/main] background time %.3f ms\n' "$(( (_fingerprint_main_end - _fingerprint_main_start) * 1000 ))" | debug
+  unset _fingerprint_main_start 
+  unset _fingerprint_main_end 
+fi

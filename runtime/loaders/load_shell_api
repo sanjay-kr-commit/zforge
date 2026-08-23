@@ -1,7 +1,7 @@
 #!/bin/env zsh
 
 zmodload zsh/datetime
-start=$EPOCHREALTIME
+_load_shell_api_start=$EPOCHREALTIME
 
 if [[ -f $_dot_bootstrap_root_/cache/shell_api_stub ]] ; then 
   source $_dot_bootstrap_root_/cache/shell_api_stub
@@ -12,6 +12,6 @@ else
   done
 fi
 
-end=$EPOCHREALTIME
+_load_shell_api_end=$EPOCHREALTIME
 
-printf 'sourcing shell_api %.3f ms\n' "$(( (end - start) * 1000 ))" | debug
+printf '[load_shell_api] %.3f ms\n' "$(( (_load_shell_api_end - _load_shell_api_start) * 1000 ))" | debug

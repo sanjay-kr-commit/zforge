@@ -3,7 +3,8 @@
 echo "sourcing env"
 export _dot_bootstrap_pid_=$$
 export _dot_bootstrap_root_="$( dirname -- $( dirname -- $(dirname -- $(realpath ${(%):-%N}))))"
-export _session_id_="$(uuidgen)"
+#export _session_id_="$(uuidgen)"
+export _session_id_="uuidgen"
 export _log_dir_="/dev/shm/logger"
 export SILENT_LOG=1
 export LOGERROR=1

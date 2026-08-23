@@ -17,7 +17,7 @@ on_logger_exit() {
   if [[ -f "$_log_dir_/$_session_id_" && -v SILENT_LOG ]]; then
     echo "executed exit trap" | debug
     exec {logger}>&-
-    # rm $_log_dir_/$_session_id_
+    rm $_log_dir_/$_session_id_
   fi
 }
 
