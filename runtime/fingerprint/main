@@ -9,11 +9,11 @@ if [[ -d $_dot_bootstrap_root_/cache ]] ; then
   echo "[fingerprint/main] cache exists : revalidating in background" | debug 
   source "$_dot_bootstrap_root_/runtime/fingerprint/init" &!
 else 
-  [[ ! -v SILENT_LOG ]] || {
+  [[ -v SILENT_LOG ]] && {
     local _main_SILENT_LOG_status=$SILENT_LOG
     unset SILENT_LOG
   }
   echo "[fingerprint/main] cache doesn't exists : generating cache" | error
   source "$_dot_bootstrap_root_/runtime/fingerprint/init" 
-  [[ ! -v _main_SILENT_LOG_status ]] || export SILENT_LOG=$_main_SILENT_LOG_status
+  [[ -v _main_SILENT_LOG_status ]] && export SILENT_LOG=$_main_SILENT_LOG_status
 fi

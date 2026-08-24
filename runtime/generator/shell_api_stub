@@ -1,7 +1,7 @@
 #!/bin/env zsh
 
 [[ -d $_dot_bootstrap_root_/cache/ ]] || mkdir $_dot_bootstrap_root_/cache
-[[ ! -f $_dot_bootstrap_root_/cache/shell_api_stub_temp ]] || rm $_dot_bootstrap_root_/cache/shell_api_stub_temp
+[[ -f $_dot_bootstrap_root_/cache/shell_api_stub_temp ]] && rm $_dot_bootstrap_root_/cache/shell_api_stub_temp
 
 echo "# $livehash" > $_dot_bootstrap_root_/cache/shell_api_stub_temp
 

@@ -14,7 +14,7 @@ for module in ${modules_arr[@]} ; do
     echo "[fingerprint/init] module generation failed" | error
     echo "[fingerprint/init] at $module" | error
     echo "[fingerprint/init] due to \"$generation_error\"" | error
-    [[ ! -d $_dot_bootstrap_root_/cache/$_session_id_ ]] || rm -r $_dot_bootstrap_root_/cache/$_session_id_
+    [[ -d $_dot_bootstrap_root_/cache/$_session_id_ ]] && rm -r $_dot_bootstrap_root_/cache/$_session_id_
     break
   }
 done
