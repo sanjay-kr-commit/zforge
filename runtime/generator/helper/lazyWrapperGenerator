@@ -8,7 +8,9 @@ rp=$(realpath "$1")
 
 rp=${rp/#$HOME/\$HOME}
 
-unfunc_random="_unfunc_$(uuidgen)"
+zmodload zsh/datetime
+
+unfunc_random="_unfunc_$EPOCHREALTIME"
 
 funcs="$(grep -E '^[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
   sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//')"
