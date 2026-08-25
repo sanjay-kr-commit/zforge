@@ -3,8 +3,8 @@
 zmodload zsh/datetime
 _load_shell_api_start=$EPOCHREALTIME
 
-if [[ -f $_dot_bootstrap_root_/cache/shell_api_stub ]] ; then 
-  source $_dot_bootstrap_root_/cache/shell_api_stub
+if [[ -f $_dot_bootstrap_root_/generated/shell_api_stub ]] ; then 
+  source $_dot_bootstrap_root_/generated/shell_api_stub
 else
   echo "[loaders/load_shell_api] shell_api_stub not found doing looped loading" | debug
   for file in $_dot_bootstrap_root_/runtime/shell_api/*; do

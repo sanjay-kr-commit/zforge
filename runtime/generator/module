@@ -1,10 +1,9 @@
 #!/bin/env zsh
 
-echo "[generator/module] TODO" | error
-return
-[[ -d $_dot_bootstrap_root_/cache/$_session_id_ ]] || mkdir -p $_dot_bootstrap_root_/cache/$_session_id_
+[[ -d $_dot_bootstrap_root_/generated/$_session_id_ ]] || mkdir -p $_dot_bootstrap_root_/generated/$_session_id_
+[[ -f $_dot_bootstrap_root_/generated/$_session_id_/module.temp ]] && rm $_dot_bootstrap_root_/generated/$_session_id_/module.temp 
 sort $_dot_bootstrap_root_/config/module | while read -r module; do
-  echo $module
+  echo $module:"$( sha256sum $_dot_bootstrap_root_/modules/$module | awk '{ print $1}')" >> $_dot_bootstrap_root_/generated/$_session_id_/module.temp 
 done
 
-
+mv $_dot_bootstrap_root_/generated/$_session_id_/module.temp  $_dot_bootstrap_root_/generated/$_session_id_/module

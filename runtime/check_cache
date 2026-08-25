@@ -1,2 +1,2 @@
 #!/bin/env zsh
-echo "checking cache"
+echo "checking generated"
