@@ -1,0 +1,37 @@
+#!/bin/env zsh
+
+# 1 -> generate
+
+[[ -d "$_dot_bootstrap_root_/generated/$_session_id_/scripts" ]] || mkdir -p "$_dot_bootstrap_root_/generated/$_session_id_/scripts"
+
+local index="$( echo $module | awk -F ':' '{ print $1 }' )" 
+local name="$( echo $module | awk -F ':' '{ print $2 }' )"
+local hash="$( echo $module | awk -F ':' '{ print $3 }' )"
+local oldModule="$(grep "^[0-9]\+:$name:" "$activeSource/module")"
+local oldIndex="$(echo "$oldModule" | awk -F ':' '{ print $1 }')"
+local oldHash="$(echo "$oldModule" | awk -F ':' '{ print $3 }')"
+
+echo "[fingeprint/module/helper/copy_module] $name hash    : $hash" | debug
+echo "[fingeprint/module/helper/copy_module] $name oldHash : $oldHash" | debug
+
+# hash mismatch
+[[ "$hash" == "$oldHash" ]] || {
+  echo 0
+  return
+}
+
+# old scripts not found
+[[ -d "$activeSource/scripts/$oldIndex" ]] || { 
+  echo "[fingeprint/module/helper/copy_module] $name old script index $oldIndex not found" | error
+  echo 0
+  return
+}
+
+cp -r "$activeSource/scripts/$oldIndex" "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index" || {
+  echo "[fingeprint/module/helper/copy_module] failed to copy $name" | error
+  echo 0
+  return
+}
+
+# don't remove this it will break logic
+echo 1

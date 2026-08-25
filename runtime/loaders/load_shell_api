@@ -1,6 +1,5 @@
 #!/bin/env zsh
 
-zmodload zsh/datetime
 _load_shell_api_start=$EPOCHREALTIME
 
 if [[ -f $_dot_bootstrap_root_/generated/shell_api_stub ]] ; then 

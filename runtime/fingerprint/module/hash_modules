@@ -1,0 +1,32 @@
+#!/bin/env zsh
+
+[[ -f $_dot_bootstrap_root_/generated/init ]] && {
+  local activeSource="$(dirname -- $( grep "source" $_dot_bootstrap_root_/generated/init | sed -e 's/^ *source *//g' ))"
+}
+
+[[ ! -v activeSource || ! -f $activeSource/module ]] && {
+  if [[ -v activeSource ]] ; then
+    echo "[fingerprint/module/hash_modules] activeSource is present but activeSource/module not found" | error
+  else
+    echo "[fingerprint/module/hash_modules] activeSource not found" | warn
+  fi
+  state="${state}hash_modules "
+  while read -r module ; do
+    source $_dot_bootstrap_root_/runtime/generator/module
+  done < $_dot_bootstrap_root_/generated/$_session_id_/module
+  return
+}
+
+local _hash_modules_state_change=""
+local _modified_modules=""
+while read -r module ; do
+  (( "$(source $_dot_bootstrap_root_/runtime/fingerprint/module/helper/copy_module)" )) || {
+    source $_dot_bootstrap_root_/runtime/generator/module
+    _hash_modules_state_change="hash_modules"
+    _modified_modules="$_modified_modules $module"
+  }
+done < $_dot_bootstrap_root_/generated/$_session_id_/module
+
+echo "[fingerprint/module/hash_modules] $_modified_modules" | debug
+state="$state$_hash_modules_state_change "
+unset _hash_modules_state_change _modified_modules

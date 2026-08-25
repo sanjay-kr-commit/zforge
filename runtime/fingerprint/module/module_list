@@ -1,0 +1,31 @@
+#!/bin/env zsh
+
+[[ -f "$_dot_bootstrap_root_/config/module" ]] || {
+  echo "[fingerprint/module/module_list] config/module not found generating an empty file" | warn
+  touch "$_dot_bootstrap_root_/config/module" 
+  state="${state}module_list "
+}
+
+[[ -f $_dot_bootstrap_root_/generated/init ]] || {
+  echo "[fingerprint/module/module_list] generated/init not found invoking module_list generator" | warn
+  source $_dot_bootstrap_root_/runtime/generator/module_list
+  state="${state}module_list "
+  return
+}
+
+local activeSource="$(dirname -- $( grep "source" $_dot_bootstrap_root_/generated/init | sed -e 's/^ *source *//g' ))"
+
+[[ -f "$activeSource/module" ]] || {
+  echo "[fingerprint/module/module_list] generated/\$activeSource/module not found invoking module_list generator" | warn
+  source $_dot_bootstrap_root_/runtime/generator/module_list
+  state="${state}module_list "
+  return
+}
+
+if [[ "$( sort $_dot_bootstrap_root_/config/module)" == "$(awk -F ':' '{ print $2 }' $activeSource/module )" ]]; then
+  echo "[fingerprint/module/module_list] config/module unchanged no action required" | debug
+else
+  echo "[fingerprint/module/module_list] config/module hash been modified invoking module_list generator" | warn
+  source $_dot_bootstrap_root_/runtime/generator/module_list
+  state="${state}module_list "
+fi

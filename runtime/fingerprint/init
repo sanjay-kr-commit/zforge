@@ -5,8 +5,8 @@ local generation_error=""
 modules_arr=(
   $_dot_bootstrap_root_/runtime/fingerprint/module/shell_api_stub
   $_dot_bootstrap_root_/runtime/fingerprint/module/cwd_add
-  $_dot_bootstrap_root_/runtime/fingerprint/module/module
-  $_dot_bootstrap_root_/runtime/fingerprint/module/hash_module
+  $_dot_bootstrap_root_/runtime/fingerprint/module/module_list
+  $_dot_bootstrap_root_/runtime/fingerprint/module/hash_modules
 )
 
 for module in ${modules_arr[@]} ; do 
@@ -24,6 +24,8 @@ if [[ -z $generation_error && ! -z $state ]] ; then
   echo "[fingerprint/init] state changes : \"$state\"" | debug
   echo "[fingerprint/init] TODO state transition : \"$state\"" | debug
 fi
+
+cp "$_log_dir_/$_session_id_" "$_dot_bootstrap_root_/generated/$_session_id_/generation_log"
 
 if [[ -v _fingerprint_main_start ]] ; then
   local _fingerprint_main_end=$EPOCHREALTIME
