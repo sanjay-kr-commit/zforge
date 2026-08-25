@@ -5,12 +5,18 @@
 [[ -f $1 ]] || { echo "File not found"; exit 1; }
 
 rp=$(realpath "$1")
+
 rp=${rp/#$HOME/\$HOME}
+
+unfunc_random="_unfunc_$(uuidgen)"
 
 funcs="$(grep -E '^[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
   sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//')"
-unfunc="$( echo $funcs | sed -e 's/\(.*\)/unfunction \1;/' | tr '\n' ' ' )"
+
+unfunc="$unfunc_random() { $( echo $funcs | sed -e 's/\(.*\)/unfunction \1;/' | tr '\n' ' ' ) }"
+
+echo $unfunc
 
 while IFS= read -r function; do
-    print -r -- "$function(){ $unfunc source \"$rp\"; $function \"\$@\"; }"
+  print -r -- "$function(){ $unfunc_random ; source \"$rp\"; $function \"\$@\"; }"
 done < <( echo $funcs )
