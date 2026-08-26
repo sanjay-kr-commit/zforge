@@ -21,6 +21,14 @@ flags="$( $_dot_bootstrap_root_/runtime/generator/helper/extract_flags $_dot_boo
   echo $flags > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags
 }
 
+dependencies="$( $_dot_bootstrap_root_/runtime/generator/helper/extract_dependencies $_dot_bootstrap_root_/modules/$name )"
+
+[[ -z "$dependencies" ]] || {
+  echo "[generator/module] dependencies found for $name : $(echo $dependencies | tr '\n' ' ' )" | debug
+  [[ -f $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies ]] && rm $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies
+  echo $dependencies > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies
+}
+
 grep -q '^# *@nolazy' "$_dot_bootstrap_root_/modules/$name" && {
   echo "[generator/module] copying $name @nolazy tag found" | debug
   cp $_dot_bootstrap_root_/modules/$name $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
