@@ -1,0 +1,3 @@
+#!/bin/env zsh
+
+[[ -f $_dot_bootstrap_root_/generated/init ]] || source $_dot_bootstrap_root_/runtime/generator/add_init

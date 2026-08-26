@@ -13,6 +13,19 @@ echo "[generator/module] generation required for module $name" | debug
   return
 }
 
+
+priority="$( source $_dot_bootstrap_root_/runtime/generator/helper/extract_priority $_dot_bootstrap_root_/modules/$name )"
+
+[[ "$priority" == "!" ]] && {
+  generation_error="[generator/helper/extract_priority] module $name : more then one priority_present '$priority_present'"
+  return 
+}
+
+[[ -z "$priority" ]] || {
+  echo "[generator/module] priority of $name : $priority" | debug
+  echo "$index:$priority" >> $_dot_bootstrap_root_/generated/$_session_id_/pmodule
+}
+
 flags="$( $_dot_bootstrap_root_/runtime/generator/helper/extract_flags $_dot_bootstrap_root_/modules/$name )"
 
 [[ -z "$flags" ]] || {

@@ -24,6 +24,10 @@ while read -r module ; do
     source $_dot_bootstrap_root_/runtime/generator/module
     _hash_modules_state_change="hash_modules"
     _modified_modules="$_modified_modules $module"
+    [[ -z "$generation_error" ]] || {
+      echo "[fingerprint/module/hash_modules] generation_error detected for module $module" | debug
+      return
+    }
   }
 done < $_dot_bootstrap_root_/generated/$_session_id_/module
 

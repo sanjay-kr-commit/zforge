@@ -5,6 +5,8 @@ local generation_error=""
 modules_arr=(
   $_dot_bootstrap_root_/runtime/fingerprint/module/shell_api_stub
   $_dot_bootstrap_root_/runtime/fingerprint/module/cwd_add
+  $_dot_bootstrap_root_/runtime/fingerprint/module/add_init
+  $_dot_bootstrap_root_/runtime/fingerprint/module/check_last_generation_failure_status
   $_dot_bootstrap_root_/runtime/fingerprint/module/module_list
   $_dot_bootstrap_root_/runtime/fingerprint/module/hash_modules
 )
@@ -15,10 +17,13 @@ for module in ${modules_arr[@]} ; do
     echo "[fingerprint/init] module generation failed" | error
     echo "[fingerprint/init] at $module" | error
     echo "[fingerprint/init] due to \"$generation_error\"" | error
-    [[ -d $_dot_bootstrap_root_/generated/$_session_id_ ]] && rm -r $_dot_bootstrap_root_/generated/$_session_id_
     break
   }
 done
+
+[[ -z "$generation_error" ]] || {
+  source $_dot_bootstrap_root_/runtime/generator/hash_failure
+}
 
 if [[ -z $generation_error && ! -z $state ]] ; then
   echo "[fingerprint/init] state changes : \"$state\"" | debug
