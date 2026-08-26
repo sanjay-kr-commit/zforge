@@ -1,0 +1,105 @@
+#!/bin/env zsh
+
+[[ $ZSH_EVAL_CONTEXT != *:file* ]] || {
+  echo "Don't source this file"
+  return 1
+}
+
+(( $# >= 2 )) || {
+  echo "Pass a file name and at least one function name"
+  return 1
+}
+
+[[ -f "$1" ]] || {
+  echo "File not found"
+  return 1
+}
+
+local file="$1"
+shift
+
+typeset -A excluded
+
+for function_name in "$@"; do
+  excluded[$function_name]=1
+done
+
+local state="normal"
+local depth=0
+local current_function=""
+local skip_function=0
+
+while IFS= read -r line; do
+  case "$state" in
+    normal)
+      if [[ "$line" =~ '^[[:space:]]*([^[:space:]]+)[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' ]]; then
+        current_function="${match[1]}"
+
+        if [[ -n ${excluded[$current_function]} ]]; then
+          skip_function=1
+        else
+          skip_function=0
+          print -r -- "$line"
+        fi
+
+        state="in_function"
+        depth=1
+        continue
+      fi
+
+      if [[ "$line" =~ '^[[:space:]]*([^[:space:]]+)[[:space:]]*\([[:space:]]*\)[[:space:]]*$' ]]; then
+        current_function="${match[1]}"
+
+        if [[ -n ${excluded[$current_function]} ]]; then
+          skip_function=1
+        else
+          skip_function=0
+          print -r -- "$line"
+        fi
+
+        state="waiting_brace"
+        continue
+      fi
+
+      print -r -- "$line"
+      ;;
+
+    waiting_brace)
+      if [[ "$line" == *'{'* ]]; then
+        state="in_function"
+
+        local tmp="$line"
+        local opens="${tmp//[^\{]/}"
+        local closes="${tmp//[^\}]/}"
+
+        (( depth += ${#opens} ))
+        (( depth -= ${#closes} ))
+
+        (( ! skip_function )) && print -r -- "$line"
+
+        if (( depth <= 0 )); then
+          depth=0
+          state="normal"
+          skip_function=0
+        fi
+      fi
+      ;;
+
+    in_function)
+      local tmp="$line"
+      local opens="${tmp//[^\{]/}"
+      local closes="${tmp//[^\}]/}"
+
+      (( depth += ${#opens} ))
+      (( depth -= ${#closes} ))
+
+      (( ! skip_function )) && print -r -- "$line"
+
+      if (( depth <= 0 )); then
+        depth=0
+        state="normal"
+        skip_function=0
+      fi
+      ;;
+  esac
+done < "$file"

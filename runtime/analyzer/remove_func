@@ -1,0 +1,66 @@
+#!/bin/env zsh
+
+[[ $ZSH_EVAL_CONTEXT != *:file* ]] || {
+  echo "Don't source this file"
+  return 1
+}
+
+(( $# == 1 )) || {
+  echo "Pass a file name"
+  return 1
+}
+
+[[ -f "$1" ]] || {
+  echo "File not found"
+  return 1
+}
+
+local state="normal"
+local depth=0
+local function_name=""
+
+while IFS= read -r line; do
+  case "$state" in
+    normal)
+      if [[ "$line" =~ '^[[:space:]]*([^[:space:]]+)[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' ]]; then
+        function_name="${match[1]}"
+        print -r -- "$function_name();"
+        state="in_function"
+        depth=1
+        continue
+      fi
+      if [[ "$line" =~ '^[[:space:]]*([^[:space:]]+)[[:space:]]*\([[:space:]]*\)[[:space:]]*$' ]]; then
+        function_name="${match[1]}"
+        print -r -- "$function_name();"
+        state="waiting_brace"
+        continue
+      fi
+      print -r -- "$line"
+      ;;
+    waiting_brace)
+      if [[ "$line" == *'{'* ]]; then
+        state="in_function"
+        local tmp="$line"
+        local opens="${tmp//[^\{]/}"
+        local closes="${tmp//[^\}]/}"
+        (( depth += ${#opens} ))
+        (( depth -= ${#closes} ))
+        if (( depth <= 0 )); then
+          depth=0
+          state="normal"
+        fi
+      fi
+      ;;
+    in_function)
+      local tmp="$line"
+      local opens="${tmp//[^\{]/}"
+      local closes="${tmp//[^\}]/}"
+      (( depth += ${#opens} ))
+      (( depth -= ${#closes} ))
+      if (( depth <= 0 )); then
+        depth=0
+        state="normal"
+      fi
+      ;;
+  esac
+done < "$1"

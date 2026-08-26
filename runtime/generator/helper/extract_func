@@ -1,0 +1,100 @@
+#!/bin/env zsh
+
+[[ $ZSH_EVAL_CONTEXT != *:file* ]] || {
+  echo "Don't source this file"
+  return 1
+}
+
+(( $# >= 2 )) || {
+  echo "Pass a file name and at least one function name"
+  return 1
+}
+
+[[ -f "$1" ]] || {
+  echo "File not found"
+  return 1
+}
+
+local file="$1"
+shift
+
+local state="normal"
+local depth=0
+local function_name=""
+local print_function=0
+
+while IFS= read -r line; do
+  case "$state" in
+    normal)
+      if [[ "$line" =~ '^[[:space:]]*([^[:space:]]+)[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' ]]; then
+        function_name="${match[1]}"
+
+        if (( $+commands[grep] )); then
+          printf '%s\n' "$@" | grep -Fxq "$function_name"
+          print_function=$?
+          (( print_function == 0 )) && print_function=1 || print_function=0
+        fi
+
+        state="in_function"
+        depth=1
+
+        (( print_function )) && print -r -- "$line"
+        continue
+      fi
+
+      if [[ "$line" =~ '^[[:space:]]*([^[:space:]]+)[[:space:]]*\([[:space:]]*\)[[:space:]]*$' ]]; then
+        function_name="${match[1]}"
+
+        if printf '%s\n' "$@" | grep -Fxq "$function_name"; then
+          print_function=1
+        else
+          print_function=0
+        fi
+
+        state="waiting_brace"
+
+        (( print_function )) && print -r -- "$line"
+        continue
+      fi
+
+      ;;
+      
+    waiting_brace)
+      if [[ "$line" == *'{'* ]]; then
+        state="in_function"
+
+        local tmp="$line"
+        local opens="${tmp//[^\{]/}"
+        local closes="${tmp//[^\}]/}"
+
+        (( depth += ${#opens} ))
+        (( depth -= ${#closes} ))
+
+        (( print_function )) && print -r -- "$line"
+
+        if (( depth <= 0 )); then
+          depth=0
+          state="normal"
+          print_function=0
+        fi
+      fi
+      ;;
+
+    in_function)
+      local tmp="$line"
+      local opens="${tmp//[^\{]/}"
+      local closes="${tmp//[^\}]/}"
+
+      (( depth += ${#opens} ))
+      (( depth -= ${#closes} ))
+
+      (( print_function )) && print -r -- "$line"
+
+      if (( depth <= 0 )); then
+        depth=0
+        state="normal"
+        print_function=0
+      fi
+      ;;
+  esac
+done < "$file"
