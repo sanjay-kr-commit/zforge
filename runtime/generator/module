@@ -13,6 +13,14 @@ echo "[generator/module] generation required for module $name" | debug
   return
 }
 
+flags="$( $_dot_bootstrap_root_/runtime/generator/helper/extract_flags $_dot_bootstrap_root_/modules/$name )"
+
+[[ -z "$flags" ]] || {
+  echo "[generator/module] flags found for $name : $(echo $flags | tr '\n' ' ' )" | debug
+  [[ -f $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags ]] && rm $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags
+  echo $flags > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags
+}
+
 grep -q '^# *@nolazy' "$_dot_bootstrap_root_/modules/$name" && {
   echo "[generator/module] copying $name @nolazy tag found" | debug
   cp $_dot_bootstrap_root_/modules/$name $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main

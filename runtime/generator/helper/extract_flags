@@ -1,0 +1,8 @@
+#!/bin/env zsh
+
+[[ $ZSH_EVAL_CONTEXT != *:file* ]] || { echo "Don't source this file" ; return 1}
+(( $# == 1 )) || { echo "Pass a file name"; exit 1; }
+[[ -f $1 ]] || { echo "File not found"; exit 1; }
+
+grep -E '^[[:space:]]*#[[:space:]]*@f[[:space:]]*->[[:space:]]*[^[:space:]]+' $1 |
+  sed -E 's/^[[:space:]]*#[[:space:]]*@f[[:space:]]*->[[:space:]]*//g'
