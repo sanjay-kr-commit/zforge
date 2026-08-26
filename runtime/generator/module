@@ -27,7 +27,8 @@ grep -q '^# *@lazy' "$_dot_bootstrap_root_/modules/$name" && {
 }
 
 echo "[generator/module] doing automatic optimization" | debug
-lazy_funcs="$( $_dot_bootstrap_root_/runtime/analyzer/lazy_funcs $_dot_bootstrap_root_/modules/$name)"
+local -a lazy_funcs
+lazy_funcs=( ${(f)"$($_dot_bootstrap_root_/runtime/analyzer/lazy_funcs "$_dot_bootstrap_root_/modules/$name")"} )
 
 [[ -z $lazy_funcs ]] && {
   echo "[generator/module] no lazy func found copying $name" | debug
@@ -36,6 +37,6 @@ lazy_funcs="$( $_dot_bootstrap_root_/runtime/analyzer/lazy_funcs $_dot_bootstrap
 }
 
 echo "[generator/module] lazy func found for $name : $lazy_funcs" | debug
-$_dot_bootstrap_root_/runtime/generator/helper/extract_func $_dot_bootstrap_root_/modules/$name $lazy_funcs > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs
-$_dot_bootstrap_root_/runtime/generator/helper/remove_func $_dot_bootstrap_root_/modules/$name $lazy_funcs > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
+$_dot_bootstrap_root_/runtime/generator/helper/extract_func $_dot_bootstrap_root_/modules/$name "${lazy_funcs[@]}" > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs
+$_dot_bootstrap_root_/runtime/generator/helper/remove_func $_dot_bootstrap_root_/modules/$name "${lazy_funcs[@]}" > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
 $_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs >> $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
