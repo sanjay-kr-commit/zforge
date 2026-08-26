@@ -4,8 +4,12 @@
 (( $# == 1 )) || { echo "Pass a file name"; exit 1; }
 [[ -f $1 ]] || { echo "File not found"; exit 1; }
 
-funcs="$(grep -E '^[[:space:]]*[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
-  sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//')"
+funcs="$(
+  grep -E \
+    '^[[:space:]]*[^#[:space:]][^[:space:]]*[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' \
+    "$1" |
+  sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//'
+)"
 
 while read -r func ; do
   [[ -z "$( $(dirname -- $(realpath ${(%):-%N}))/remove_func "$1" | grep "$func" | tail -n1 | grep "$func();" )" ]] || {
