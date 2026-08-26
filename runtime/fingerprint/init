@@ -6,9 +6,12 @@ modules_arr=(
   $_dot_bootstrap_root_/runtime/fingerprint/module/shell_api_stub
   $_dot_bootstrap_root_/runtime/fingerprint/module/cwd_add
   $_dot_bootstrap_root_/runtime/fingerprint/module/add_init
-  $_dot_bootstrap_root_/runtime/fingerprint/module/check_last_generation_failure_status
+  $_dot_bootstrap_root_/runtime/fingerprint/module/check_last_generation
   $_dot_bootstrap_root_/runtime/fingerprint/module/module_list
   $_dot_bootstrap_root_/runtime/fingerprint/module/hash_modules
+
+  # lots of things remaining
+  $_dot_bootstrap_root_/runtime/fingerprint/module/publish_latest_snapshot_state
 )
 
 for module in ${modules_arr[@]} ; do 
@@ -19,7 +22,16 @@ for module in ${modules_arr[@]} ; do
     echo "[fingerprint/init] due to \"$generation_error\"" | error
     break
   }
+  [[ -v no_generation_required ]] && {
+    echo "[fingerprint/init] current and last snapshots are same" | debug
+    break
+  }
 done
+
+[[ -v no_generation_required ]] && {
+  unset no_generation_required
+  return
+}
 
 [[ -z "$generation_error" ]] || {
   source $_dot_bootstrap_root_/runtime/generator/hash_failure
