@@ -1,0 +1,10 @@
+#!/bin/env zsh
+
+local _sort_priority_pmodule="$_dot_bootstrap_root_/generated/$_session_id_/pmodule"
+local _sorted_priority_pmodule="$(
+  grep -E '.+:-[0-9]+$' "$_sort_priority_pmodule" | sort -t: -k2,2n ;
+  grep -E '.+:\?$' "$_sort_priority_pmodule" ;
+  grep -E '.+:[0-9]+$' "$_sort_priority_pmodule" | sort -t: -k2,2n 
+)"
+echo $_sorted_priority_pmodule > "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted"
+unset _sorted_priority_pmodule _sort_priority_pmodule

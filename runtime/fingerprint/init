@@ -9,7 +9,9 @@ modules_arr=(
   $_dot_bootstrap_root_/runtime/fingerprint/module/check_last_generation
   $_dot_bootstrap_root_/runtime/fingerprint/module/module_list
   $_dot_bootstrap_root_/runtime/fingerprint/module/hash_modules
-
+  $_dot_bootstrap_root_/runtime/fingerprint/module/verify_dependency_presence
+  $_dot_bootstrap_root_/runtime/fingerprint/module/sort_priority
+  $_dot_bootstrap_root_/runtime/fingerprint/module/sort_dependencies
   # lots of things remaining
   $_dot_bootstrap_root_/runtime/fingerprint/module/publish_latest_snapshot_state
 )

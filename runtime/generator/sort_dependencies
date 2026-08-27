@@ -1,0 +1,59 @@
+#!/bin/env zsh
+
+[[ -v mapKey ]] && unset mapKey
+[[ -v mapValue ]] && unset mapValue
+
+typeset -a mapKey
+typeset -A mapValue
+
+while read -r dependencies ; do 
+  moduleIndex="${dependencies#$_dot_bootstrap_root_/generated/$_session_id_/scripts/}"
+  moduleIndex="${moduleIndex%/dependencies}"
+  moduleName="$( grep "^$moduleIndex:.*" "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk -F ':' '{ print $2 }' )"
+  mapKey+=("$moduleName")
+  mapValue[$moduleName]="$( cat $dependencies )"
+done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
+
+#echo "-- map"
+#for module in "${mapKey[@]}"; do
+#  echo ""
+#  echo "$module : $( echo ${mapValue[$module]} | tr '\n' ' ' )"
+#  for dependentModule in ${(f)mapValue[$module]} ; do 
+#    echo "$dependentModule"
+#  done
+#done
+#  echo ""
+#echo "-- end"
+
+local detectCycle() {
+  echo "${detectCyclePath[@]}" | grep -q ":$1:" && {
+    detectCyclePath+=("-> :$1:")
+    echo "[generator/sort_dependencies] cycle detected" | error
+    echo "[generator/sort_dependencies] \"${detectCyclePath[@]}\"" | error
+    generation_error="[generator/sort_dependencies] cycle detected : \"${detectCyclePath[@]}\""
+    return
+  }
+  detectCyclePath+=("-> :$1:")
+  for dependentModule in ${(f)mapValue[$1]}; do
+    detectCycle "$dependentModule"
+    [[ -z $generation_error ]] || {
+      return
+    }
+  done
+}
+
+[[ -v detectCyclePath ]] && unset detectCyclePath
+for module in "${mapKey[@]}"; do
+  typeset -a detectCyclePath
+  detectCycle "$module"
+  unset detectCyclePath
+  [[ -z $generation_error ]] || {
+    unset detectCycle
+    return
+  }
+done
+
+unset detectCycle
+
+# no cycle found
+echo "TODO"
