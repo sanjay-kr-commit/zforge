@@ -6,7 +6,7 @@
 priority_present="$(grep -E '^[[:space:]]*#[[:space:]]*@p[[:space:]]*->[[:space:]]*[^[:space:]]+' $1 |
   sed -E 's/^[[:space:]]*#[[:space:]]*@p[[:space:]]*->[[:space:]]*//g' )"
 
-(( "$( echo $priority_present | wc -l )" != 1 )) && {
+(( "$( echo $priority_present | wc -l )" > 1 )) && {
   generation_error="[generator/helper/extract_priority] module $name : more then one priority_present '$priority_present'"
   echo "[generator/helper/extract_priority] module $name : more then one priority_present '$priority_present'" | error
   echo "!"
@@ -17,4 +17,8 @@ priority_present="$(grep -E '^[[:space:]]*#[[:space:]]*@p[[:space:]]*->[[:space:
   fi
 }
 
-echo "$priority_present"
+if [[ -z "$priority_present" ]] ; then
+  echo "?"
+else
+  echo "$priority_present"
+fi
