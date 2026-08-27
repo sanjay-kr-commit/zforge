@@ -15,10 +15,10 @@ unfunc_random="_unfunc_$EPOCHREALTIME"
 funcs="$(grep -E '^ *[^ ]+[[:space:]]*\([[:space:]]*\)[[:space:]]*\{' "$1" |
   sed -E 's/[[:space:]]*\([[:space:]]*\)[[:space:]]*\{.*//')"
 
-unfunc="$unfunc_random() { $( echo $funcs | sed -e 's/\(.*\)/unfunction \1;/' | tr '\n' ' ' ) }"
+unfunc="$unfunc_random() { $( echo $funcs | sed -e 's/\(.*\)/unfunction \1;/' | tr '\n' ' ' ) source \"$rp\" }"
 
 echo $unfunc
 
 while IFS= read -r function; do
-  print -r -- "$function(){ $unfunc_random ; source \"$rp\"; $function \"\$@\"; }"
+  print -r -- "$function(){ $unfunc_random ; $function \"\$@\"; }"
 done < <( echo $funcs )
