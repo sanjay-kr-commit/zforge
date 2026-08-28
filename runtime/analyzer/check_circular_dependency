@@ -1,0 +1,45 @@
+#!/bin/env zsh
+
+[[ -v mapKey ]] && unset mapKey
+[[ -v mapValue ]] && unset mapValue
+
+typeset -a mapKey
+typeset -A mapValue
+
+while read -r dependencies ; do 
+  moduleIndex="${dependencies#$_dot_bootstrap_root_/generated/$_session_id_/scripts/}"
+  moduleIndex="${moduleIndex%/dependencies}"
+  moduleName="$( grep "^$moduleIndex:.*" "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk -F ':' '{ print $2 }' )"
+  mapKey+=("$moduleName")
+  mapValue[$moduleName]="$( cat $dependencies )"
+done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
+
+local detectCycle() {
+  echo "${detectCyclePath[@]}" | grep -q ":$1:" && {
+    detectCyclePath+=("-> :$1:")
+    echo "[analyzer/check_circular_dependency] cycle detected" | error
+    echo "[analyzer/check_circular_dependency] \"${detectCyclePath[@]}\"" | error
+    generation_error="[analyzer/check_circular_dependency] cycle detected : \"${detectCyclePath[@]}\""
+    return
+  }
+  detectCyclePath+=("-> :$1:")
+  for dependentModule in ${(f)mapValue[$1]}; do
+    detectCycle "$dependentModule"
+    [[ -z $generation_error ]] || {
+      return
+    }
+  done
+}
+
+[[ -v detectCyclePath ]] && unset detectCyclePath
+for module in "${mapKey[@]}"; do
+  typeset -a detectCyclePath
+  detectCycle "$module"
+  unset detectCyclePath
+  [[ -z $generation_error ]] || {
+    unset detectCycle
+    return
+  }
+done
+
+unset detectCycle mapKey mapValue

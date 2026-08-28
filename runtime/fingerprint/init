@@ -11,6 +11,7 @@ modules_arr=(
   $_dot_bootstrap_root_/runtime/fingerprint/module/hash_modules
   $_dot_bootstrap_root_/runtime/fingerprint/module/verify_dependency_presence
   $_dot_bootstrap_root_/runtime/fingerprint/module/sort_priority
+  $_dot_bootstrap_root_/runtime/fingerprint/module/check_circular_dependency
   $_dot_bootstrap_root_/runtime/fingerprint/module/sort_dependencies
   # lots of things remaining
   $_dot_bootstrap_root_/runtime/fingerprint/module/publish_latest_snapshot_state
