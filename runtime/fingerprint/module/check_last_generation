@@ -17,7 +17,7 @@ current_hash="$( source $_dot_bootstrap_root_/runtime/generator/config_module_ha
 [[ -f $_dot_bootstrap_root_/generated/last_generation ]] && {
   last_generation="$( head -n1 $_dot_bootstrap_root_/generated/last_generation )"
   [[ "$current_hash" == "$last_generation" ]] && {
-    echo "[fingerprint/module/check_last_generation] no change to the module config : $( tail -n1 $_dot_bootstrap_root_/generated/last_generation )" | error
+    echo "[fingerprint/module/check_last_generation] no change to the module config : $( tail -n1 $_dot_bootstrap_root_/generated/last_generation )" | debug
     echo "[fingerprint/module/check_last_generation] last_generation : $last_generation " | debug
     echo "[fingerprint/module/check_last_generation] current_Hash : $current_hash " | debug
     export no_generation_required
