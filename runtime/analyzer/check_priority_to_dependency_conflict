@@ -1,0 +1,22 @@
+#!/bin/env zsh
+
+while read -r dependencies ; do 
+  moduleIndex="${dependencies#$_dot_bootstrap_root_/generated/$_session_id_/scripts/}"
+  moduleIndex="${moduleIndex%/dependencies}"
+  moduleName="$(awk -F ':' '{ print $2 }' <<< "$(grep "^$moduleIndex:.\+:.\+" "$_dot_bootstrap_root_/generated/$_session_id_/module")")"
+  echo "$moduleName"
+  priority="$(awk -F ':' '{ print $2 }' <<< "$(grep "^$moduleIndex:" "$_dot_bootstrap_root_/generated/$_session_id_/pmodule")")"
+  [[ "$priority" == "?" ]] && continue ;
+  while read -r dependency ; do
+    dependencyIndex="$(awk -F ':' '{ print $1 }' <<< "$(grep "^[0-9]\+:$dependency:.\+" "$_dot_bootstrap_root_/generated/$_session_id_/module")")"
+    dependencyPriority="$(awk -F ':' '{ print $2 }' <<< "$(grep "^$dependencyIndex:" "$_dot_bootstrap_root_/generated/$_session_id_/pmodule")")"
+    [[ "$dependencyPriority" == "?" ]] && continue ;
+    (( "$priority" < "$dependencyPriority" )) && {
+      echo "[analyzer/check_priority_to_dependency_conflict] dependency has greater priority then dependent" | error 
+      echo "[analyzer/check_priority_to_dependency_conflict] dependent  : $moduleIndex -> $priority" | error 
+      echo "[analyzer/check_priority_to_dependency_conflict] dependency : $dependencyIndex:$dependency -> $dependencyPriority" | error 
+      generation_error="[analyzer/check_priority_to_dependency_conflict] dependency has greater priority then dependent" | error 
+      return
+    }
+  done < "$dependencies" 
+done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
