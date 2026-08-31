@@ -7,13 +7,13 @@
   local TICK="✓"
   local CROSS="✗"
 
-  local output="$(find $_dot_bootstrap_root_/modules -type f | \
+  local output="$(find "$_dot_bootstrap_root_/modules" -type f | \
   while read -r line; do 
     if ! [[ "$(cat $line | head -n1 | grep -o "#!/bin/.*")" =~ "#!/bin/.*" ]] ; then 
       continue
     fi
     line=${line#"$_dot_bootstrap_root_/modules/"}
-    if [[ "$(grep -o "^$line\$" $_dot_bootstrap_root_/config/module)" == $line ]] ; then
+    if [[ "$(grep -o "^$line\$" "$_dot_bootstrap_root_/config/module")" == "$line" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
@@ -30,23 +30,23 @@
 
 _dot_module_enable() {
   echo "Enable module : $1" | debug
-  echo "$1" >> $_dot_bootstrap_root_/config/module
-  source $_dot_bootstrap_root_/modules/$1
+  echo "$1" >> "$_dot_bootstrap_root_/config/module"
+  # source "$_dot_bootstrap_root_/modules/$1"
 }
 
 _dot_module_disable() {
   suffix="$( echo $1 | sed -e "s/\//#/g" )"
   echo "Disable module : $1" | debug
-  if [[ -f $_dot_bootstrap_root_/config/module_$suffix ]] ; then
-    rm $_dot_bootstrap_root_/config/module_$suffix
+  if [[ -f "$_dot_bootstrap_root_/config/module_$suffix" ]] ; then
+    rm "$_dot_bootstrap_root_/config/module_$suffix"
   fi
-  touch $_dot_bootstrap_root_/config/module_$suffix
+  touch "$_dot_bootstrap_root_/config/module_$suffix"
   while read -r line; do
     if [[ $line != $1 ]] ; then
-      echo "$line" >> $_dot_bootstrap_root_/config/module_$suffix
+      echo "$line" >> "$_dot_bootstrap_root_/config/module_$suffix"
     fi
-  done < $_dot_bootstrap_root_/config/module
-  mv $_dot_bootstrap_root_/config/module_$suffix $_dot_bootstrap_root_/config/module
+  done < "$_dot_bootstrap_root_/config/module"
+  mv "$_dot_bootstrap_root_/config/module_$suffix" "$_dot_bootstrap_root_/config/module"
   echo "Shell Retart is required to apply changed" | debug
 }
 

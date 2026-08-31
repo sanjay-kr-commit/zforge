@@ -1,8 +1,8 @@
 #!/bin/env zsh
 
 count="0"
-sort $_dot_bootstrap_root_/config/module | while read -r module; do
+sort "$_dot_bootstrap_root_/config/module" | while read -r module; do
   count=$(($count+1))
-  echo $count:$module:"$( sha256sum $_dot_bootstrap_root_/modules/$module | awk '{ print $1}')" 
+  echo "$count:$module:$( sha256sum "$_dot_bootstrap_root_/modules/$module" | awk '{ print $1}')" 
 done | sha256sum | awk '{ print $1 }'
 unset count

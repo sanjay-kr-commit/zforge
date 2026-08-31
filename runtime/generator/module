@@ -8,12 +8,12 @@ local hash="$( echo $module | awk -F ':' '{ print $3 }' )"
 
 echo "[generator/module] generation required for module $name" | debug
 
-[[ "$($_dot_bootstrap_root_/runtime/analyzer/is_script_parsable $_dot_bootstrap_root_/modules/$name)" ]] || {
+[[ "$("$_dot_bootstrap_root_/runtime/analyzer/is_script_parsable" "$_dot_bootstrap_root_/modules/$name")" ]] || {
   echo "[generator/module] script $name failed to load" | error
   return
 }
 
-priority="$( source $_dot_bootstrap_root_/runtime/generator/helper/extract_priority $_dot_bootstrap_root_/modules/$name )"
+priority="$( source "$_dot_bootstrap_root_/runtime/generator/helper/extract_priority" "$_dot_bootstrap_root_/modules/$name" )"
 
 [[ "$priority" == "!" ]] && {
   generation_error="[generator/helper/extract_priority] module $name : more then one priority_present '$priority_present'"
@@ -22,49 +22,49 @@ priority="$( source $_dot_bootstrap_root_/runtime/generator/helper/extract_prior
 
 [[ -z "$priority" ]] || {
   echo "[generator/module] priority of $name : $priority" | debug
-  echo "$index:$priority" >> $_dot_bootstrap_root_/generated/$_session_id_/pmodule
+  echo "$index:$priority" >> "$_dot_bootstrap_root_/generated/$_session_id_/pmodule"
 }
 
-flags="$( $_dot_bootstrap_root_/runtime/generator/helper/extract_flags $_dot_bootstrap_root_/modules/$name )"
+flags="$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_flags" "$_dot_bootstrap_root_/modules/$name" )"
 
 [[ -z "$flags" ]] || {
   echo "[generator/module] flags found for $name : $(echo $flags | tr '\n' ' ' )" | debug
-  [[ -f $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags ]] && rm $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags
-  echo $flags > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags
+  [[ -f "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags" ]] && rm "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags"
+  echo "$flags" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/flags"
 }
 
-dependencies="$( $_dot_bootstrap_root_/runtime/generator/helper/extract_dependencies $_dot_bootstrap_root_/modules/$name )"
+dependencies="$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_dependencies" "$_dot_bootstrap_root_/modules/$name" )"
 
 [[ -z "$dependencies" ]] || {
   echo "[generator/module] dependencies found for $name : $(echo $dependencies | tr '\n' ' ' )" | debug
-  [[ -f $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies ]] && rm $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies
-  echo $dependencies > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies
+  [[ -f "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies" ]] && rm "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies"
+  echo "$dependencies" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies"
 }
 
 grep -q '^# *@nolazy' "$_dot_bootstrap_root_/modules/$name" && {
   echo "[generator/module] copying $name @nolazy tag found" | debug
-  cat $_dot_bootstrap_root_/modules/$name | $_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
+  cat "$_dot_bootstrap_root_/modules/$name" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
   return
 }
 
 grep -q '^# *@lazy' "$_dot_bootstrap_root_/modules/$name" && {
   echo "[generator/module] generating lazy stub for $name @lazy tag found" | debug
-  cat $_dot_bootstrap_root_/modules/$name | $_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy
-  $_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
+  cat "$_dot_bootstrap_root_/modules/$name" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy"
+  "$_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator" "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
   return
 }
 
 echo "[generator/module] doing automatic optimization" | debug
 local -a lazy_funcs
-lazy_funcs=( ${(f)"$($_dot_bootstrap_root_/runtime/analyzer/lazy_funcs "$_dot_bootstrap_root_/modules/$name")"} )
+lazy_funcs=( ${(f)"$("$_dot_bootstrap_root_/runtime/analyzer/lazy_funcs" "$_dot_bootstrap_root_/modules/$name")"} )
 
 [[ -z $lazy_funcs ]] && {
   echo "[generator/module] no lazy func found copying $name" | debug
-  cat $_dot_bootstrap_root_/modules/$name | $_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
+  cat "$_dot_bootstrap_root_/modules/$name" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
   return
 }
 
 echo "[generator/module] lazy func found for $name : $lazy_funcs" | debug
-$_dot_bootstrap_root_/runtime/generator/helper/extract_func $_dot_bootstrap_root_/modules/$name "${lazy_funcs[@]}" | $_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs
-$_dot_bootstrap_root_/runtime/generator/helper/remove_func $_dot_bootstrap_root_/modules/$name "${lazy_funcs[@]}" | $_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment > $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
-$_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs >> $_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main
+"$_dot_bootstrap_root_/runtime/generator/helper/extract_func" "$_dot_bootstrap_root_/modules/$name" "${lazy_funcs[@]}" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs"
+"$_dot_bootstrap_root_/runtime/generator/helper/remove_func" "$_dot_bootstrap_root_/modules/$name" "${lazy_funcs[@]}" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
+"$_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator" "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs" >> "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"

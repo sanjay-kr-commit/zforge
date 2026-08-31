@@ -1,7 +1,7 @@
 #!/bin/env zsh
 
-[[ -f $_dot_bootstrap_root_/generated/init && ! -z "$(grep "source" $_dot_bootstrap_root_/generated/init)" ]] && {
-  local activeSource="$(dirname -- $( grep "source" $_dot_bootstrap_root_/generated/init | sed -e 's/^ *source *//g' ))"
+[[ -f "$_dot_bootstrap_root_/generated/init" && ! -z "$(grep "source" "$_dot_bootstrap_root_/generated/init")" ]] && {
+  local activeSource="$(dirname -- $( grep "source" "$_dot_bootstrap_root_/generated/init" | sed -e 's/^ *source *//g' ))"
 }
 
 [[ ! -v activeSource || ! -f $activeSource/module ]] && {
@@ -12,16 +12,16 @@
   fi
   state="${state}hash_modules "
   while read -r module ; do
-    source $_dot_bootstrap_root_/runtime/generator/module
-  done < $_dot_bootstrap_root_/generated/$_session_id_/module
+    source "$_dot_bootstrap_root_/runtime/generator/module"
+  done < "$_dot_bootstrap_root_/generated/$_session_id_/module"
   return
 }
 
 local _hash_modules_state_change=""
 local _modified_modules=""
 while read -r module ; do
-  (( "$(source $_dot_bootstrap_root_/runtime/fingerprint/helper/copy_module)" )) || {
-    source $_dot_bootstrap_root_/runtime/generator/module
+  (( "$(source "$_dot_bootstrap_root_/runtime/fingerprint/helper/copy_module")" )) || {
+    source "$_dot_bootstrap_root_/runtime/generator/module"
     _hash_modules_state_change="hash_modules"
     _modified_modules="$_modified_modules $module"
     [[ -z "$generation_error" ]] || {
@@ -29,7 +29,7 @@ while read -r module ; do
       return
     }
   }
-done < $_dot_bootstrap_root_/generated/$_session_id_/module
+done < "$_dot_bootstrap_root_/generated/$_session_id_/module"
 
 echo "[fingerprint/hash_modules] $_modified_modules" | debug
 state="$state$_hash_modules_state_change "

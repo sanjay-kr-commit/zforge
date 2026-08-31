@@ -2,7 +2,7 @@
 
 local state=""
 
-if [[ -d $_dot_bootstrap_root_/generated ]] ; then
+if [[ -d "$_dot_bootstrap_root_/generated" ]] ; then
   local _orchestrator_main_start=$EPOCHREALTIME
   echo "[orchestrator/main] generated exists : revalidating in background" | debug 
   source "$_dot_bootstrap_root_/runtime/orchestrator/init" &!

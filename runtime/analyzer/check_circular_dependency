@@ -7,12 +7,12 @@ typeset -a mapKey
 typeset -A mapValue
 
 while read -r dependencies ; do 
-  moduleIndex="${dependencies#$_dot_bootstrap_root_/generated/$_session_id_/scripts/}"
+  moduleIndex="${dependencies#"$_dot_bootstrap_root_/generated/$_session_id_/scripts/"}"
   moduleIndex="${moduleIndex%/dependencies}"
   moduleName="$( grep "^$moduleIndex:.*" "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk -F ':' '{ print $2 }' )"
   mapKey+=("$moduleName")
-  mapValue[$moduleName]="$( cat $dependencies )"
-done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
+  mapValue[$moduleName]="$( cat "$dependencies" )"
+done < <( find "$_dot_bootstrap_root_/generated/$_session_id_/scripts" -type f -name 'dependencies')
 
 local detectCycle() {
   echo "${detectCyclePath[@]}" | grep -q ":$1:" && {
@@ -25,7 +25,7 @@ local detectCycle() {
   detectCyclePath+=("-> :$1:")
   for dependentModule in ${(f)mapValue[$1]}; do
     detectCycle "$dependentModule"
-    [[ -z $generation_error ]] || {
+    [[ -z "$generation_error" ]] || {
       return
     }
   done
@@ -36,7 +36,7 @@ for module in "${mapKey[@]}"; do
   typeset -a detectCyclePath
   detectCycle "$module"
   unset detectCyclePath
-  [[ -z $generation_error ]] || {
+  [[ -z "$generation_error" ]] || {
     unset detectCycle
     return
   }

@@ -1,12 +1,12 @@
 #!/bin/env zsh
 
-[[ -d $_dot_bootstrap_root_/generated/ ]] || mkdir $_dot_bootstrap_root_/generated
-[[ -f $_dot_bootstrap_root_/generated/shell_api_stub_temp ]] && rm $_dot_bootstrap_root_/generated/shell_api_stub_temp
+[[ -d "$_dot_bootstrap_root_/generated/" ]] || mkdir "$_dot_bootstrap_root_/generated"
+[[ -f "$_dot_bootstrap_root_/generated/shell_api_stub_temp" ]] && rm "$_dot_bootstrap_root_/generated/shell_api_stub_temp"
 
-echo "# $livehash" > $_dot_bootstrap_root_/generated/shell_api_stub_$_session_id_
+echo "# $livehash" > "$_dot_bootstrap_root_/generated/shell_api_stub_$_session_id_"
 
-for file in $_dot_bootstrap_root_/runtime/shell_api/* ; do 
-  $_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator $file  >> $_dot_bootstrap_root_/generated/shell_api_stub_$_session_id_
+for file in "$_dot_bootstrap_root_/runtime/shell_api/"* ; do 
+  "$_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator" "$file" >> "$_dot_bootstrap_root_/generated/shell_api_stub_$_session_id_"
 done
 
-mv $_dot_bootstrap_root_/generated/shell_api_stub_$_session_id_ $_dot_bootstrap_root_/generated/shell_api_stub
+mv "$_dot_bootstrap_root_/generated/shell_api_stub_$_session_id_" "$_dot_bootstrap_root_/generated/shell_api_stub"

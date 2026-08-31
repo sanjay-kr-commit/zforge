@@ -2,10 +2,10 @@
 
 while read -r dependencies; do
   while read -r dependency ; do 
-    grep -q ":$dependency:" $_dot_bootstrap_root_/generated/$_session_id_/module || {
+    grep -q ":$dependency:" "$_dot_bootstrap_root_/generated/$_session_id_/module" || {
       echo "[fingerprint/helper/verify_dependency_presence] '$dependency' declared but not found in enabled path" | error
       generation_error="$dependency declared but not found in enabled path"
       return
     }
-  done <$dependencies
-done < <(find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies' )
+  done <"$dependencies"
+done < <(find "$_dot_bootstrap_root_/generated/$_session_id_/scripts" -type f -name 'dependencies' )

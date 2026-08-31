@@ -1,4 +1,4 @@
 #!/bin/env zsh
-[[ -f "$_dot_bootstrap_root_/generated/failure_hash" ]] && rm $_dot_bootstrap_root_/generated/failure_hash
-sha256sum $_dot_bootstrap_root_/generated/$_session_id_/module | awk '{ print $1 }' > $_dot_bootstrap_root_/generated/failure_hash
-echo $_session_id_ >> $_dot_bootstrap_root_/generated/failure_hash
+[[ -f "$_dot_bootstrap_root_/generated/failure_hash" ]] && rm "$_dot_bootstrap_root_/generated/failure_hash"
+sha256sum "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk '{ print $1 }' > "$_dot_bootstrap_root_/generated/failure_hash"
+echo "$_session_id_" >> "$_dot_bootstrap_root_/generated/failure_hash"

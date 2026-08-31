@@ -5,8 +5,8 @@
 [[ -f $1 ]] || { echo "File not found"; exit 1; }
 
 rp=$(realpath "$1")
-rp=${rp/#$_dot_bootstrap_root_/\$_dot_bootstrap_root_}
-rp=${rp/#$HOME/\$HOME}
+rp=${rp/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}
+rp=${rp/#"$HOME"/\$HOME}
 
 zmodload zsh/datetime
 

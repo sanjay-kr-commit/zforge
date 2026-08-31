@@ -3,17 +3,16 @@
 zmodload zsh/datetime
 local _init_start=$EPOCHREALTIME
 
-source $(dirname -- $(realpath ${(%):-%N}))/initialize/env 
-source $_dot_bootstrap_root_/runtime/initialize/init_logger
+source "$(dirname -- $(realpath ${(%):-%N}))/initialize/env"
+source "$_dot_bootstrap_root_/runtime/initialize/init_logger"
 
 echo "root dir : $_dot_bootstrap_root_" | debug
 echo "session id : $_session_id_" | debug
-echo "$_session_id_" 
 
-source $_dot_bootstrap_root_/runtime/orchestrator/main
+source "$_dot_bootstrap_root_/runtime/orchestrator/main"
 
-source $_dot_bootstrap_root_/runtime/loaders/load_shell_api
- 
+source "$_dot_bootstrap_root_/runtime/loaders/load_shell_api"
+
 if [[ -f "$_dot_bootstrap_root_/generated/init" ]]; then
    source "$_dot_bootstrap_root_/generated/init"
 else

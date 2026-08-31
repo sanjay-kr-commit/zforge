@@ -1,24 +1,24 @@
 #!/bin/zsh
 
 _dot_flag_enable() {
-  $_dot_bootstrap_root_/runtime/logger debug "Enable Flag : $1"
-  echo "$1" >> $_dot_bootstrap_root_/config/FLAGS
+  "$_dot_bootstrap_root_/runtime/logger" debug "Enable Flag : $1"
+  echo "$1" >> "$_dot_bootstrap_root_/config/FLAGS"
   export $1=1
 }
 
 _dot_flag_disable() {
-  $_dot_bootstrap_root_/runtime/logger debug "Disable Flag : $1"
-  if [[ -f $_dot_bootstrap_root_/config/FLAGS_$1 ]] ; then
-    rm $_dot_bootstrap_root_/config/FLAGS_$1
+  "$_dot_bootstrap_root_/runtime/logger" debug "Disable Flag : $1"
+  if [[ -f "$_dot_bootstrap_root_/config/FLAGS_$1" ]] ; then
+    rm "$_dot_bootstrap_root_/config/FLAGS_$1"
   fi
-  touch $_dot_bootstrap_root_/config/FLAGS_$1
+  touch "$_dot_bootstrap_root_/config/FLAGS_$1"
   while read -r line; do
-    if [[ $line != $1 ]] ; then
-      echo "$line" >> $_dot_bootstrap_root_/config/FLAGS_$1
+    if [[ "$line" != "$1" ]] ; then
+      echo "$line" >> "$_dot_bootstrap_root_/config/FLAGS_$1"
     fi
-  done < $_dot_bootstrap_root_/config/FLAGS
-  mv $_dot_bootstrap_root_/config/FLAGS_$1 $_dot_bootstrap_root_/config/FLAGS
-  unset $1
+  done < "$_dot_bootstrap_root_/config/FLAGS"
+  mv "$_dot_bootstrap_root_/config/FLAGS_$1" "$_dot_bootstrap_root_/config/FLAGS"
+  unset "$1"
 }
 
 :listFlags() {
@@ -28,18 +28,18 @@ _dot_flag_disable() {
   local TICK="✓"
   local CROSS="✗"
   local output="$(while read -r line ; do 
-    if [[ "$(grep -o "$line" $_dot_bootstrap_root_/config/FLAGS)" == $line ]] ; then
+    if [[ "$(grep -o "$line" "$_dot_bootstrap_root_/config/FLAGS")" == $line ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
     echo "$line"
-  done < $_dot_bootstrap_root_/runtime/LIST_OF_FLAGS )" 
-  for line in $( echo $_dot_dynamic_flags | tr '\n' ' ') ; do
+  done < "$_dot_bootstrap_root_/runtime/LIST_OF_FLAGS" )" 
+  for line in $( echo "$_dot_dynamic_flags" | tr '\n' ' ') ; do
     if [[ -z $line ]] ; then
       continue
     fi
-    output+="\n$(if [[ "$(grep -o "$line" $_dot_bootstrap_root_/config/FLAGS)" == $line ]] ; then
+    output+="\n$(if [[ "$(grep -o "$line" "$_dot_bootstrap_root_/config/FLAGS")" == "$line" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "

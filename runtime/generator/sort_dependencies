@@ -8,13 +8,13 @@ typeset -A printed
 while read -r module ; do
   index="$( awk -F ':' '{ print $1 }' <<< "$module")"
   indexToWhole["$index"]="$module"
-done <$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted
+done <"$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted"
 
 while read -r module ; do
   index="$( awk -F ':' '{ print $1 }' <<< "$module")"
   name="$( awk -F ':' '{ print $2 }' <<< "$module")"
   nameToIndex["$name"]="$index"
-done <$_dot_bootstrap_root_/generated/$_session_id_/module
+done <"$_dot_bootstrap_root_/generated/$_session_id_/module"
 
 priortisedDependencies() {
   while read -r dependency ; do 
@@ -45,7 +45,7 @@ processDependency() {
 
 (while read -r module ; do
   processDependency "$module"
-done <$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted) > "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted_dependency_sorted"
+done <"$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted") > "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted_dependency_sorted"
 
 unset indexToWhole nameToIndex printed priortisedDependencies sortedDependencies processDependency 
 state="${state}sort_dependencies "

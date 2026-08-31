@@ -1,7 +1,7 @@
 #!/bin/env zsh
 
 while read -r dependencies ; do 
-  moduleIndex="${dependencies#$_dot_bootstrap_root_/generated/$_session_id_/scripts/}"
+  moduleIndex="${dependencies#"$_dot_bootstrap_root_/generated/$_session_id_/scripts/"}"
   moduleIndex="${moduleIndex%/dependencies}"
   moduleName="$(awk -F ':' '{ print $2 }' <<< "$(grep "^$moduleIndex:.\+:.\+" "$_dot_bootstrap_root_/generated/$_session_id_/module")")"
   echo "$moduleName"
@@ -19,7 +19,7 @@ while read -r dependencies ; do
       return
     }
   done < "$dependencies" 
-done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
+done < <( find "$_dot_bootstrap_root_/generated/$_session_id_/scripts" -type f -name 'dependencies')
 
 
 state="${state}check_priority_to_dependency_conflict "
