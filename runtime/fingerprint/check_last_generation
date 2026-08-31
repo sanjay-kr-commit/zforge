@@ -1,0 +1,25 @@
+#!/bin/env zsh
+
+current_hash="$( source $_dot_bootstrap_root_/runtime/generator/config_module_hash )"
+
+[[ -f $_dot_bootstrap_root_/generated/failure_hash ]] && {
+  failure_hash="$( head -n1 $_dot_bootstrap_root_/generated/failure_hash )"
+  [[ "$current_hash" == "$failure_hash" ]] && {
+    echo "[fingerprint/check_last_generation] this snapshot has already failed previously : $( tail -n1 $_dot_bootstrap_root_/generated/failure_hash )" | error
+    echo "[fingerprint/check_last_generation] failure_hash : $failure_hash " | error
+    echo "[fingerprint/check_last_generation] current_Hash : $current_hash " | error
+    generation_error="[fingerprint/check_last_generation_failure_status] this snapshot has already failed previously"
+    export no_generation_required
+    return
+  }
+}
+
+[[ -f $_dot_bootstrap_root_/generated/last_generation ]] && {
+  last_generation="$( head -n1 $_dot_bootstrap_root_/generated/last_generation )"
+  [[ "$current_hash" == "$last_generation" ]] && {
+    echo "[fingerprint/check_last_generation] no change to the module config : $( tail -n1 $_dot_bootstrap_root_/generated/last_generation )" | debug
+    echo "[fingerprint/check_last_generation] last_generation : $last_generation " | debug
+    echo "[fingerprint/check_last_generation] current_Hash : $current_hash " | debug
+    export no_generation_required
+  }
+}

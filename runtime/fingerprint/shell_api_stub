@@ -5,7 +5,7 @@ local livehash=$(sha256sum < <(while read -r line; do
 done < <(ls $_dot_bootstrap_root_/runtime/shell_api | sort )) | awk '{ print $1 }')
 
 [[ -f $_dot_bootstrap_root_/generated/shell_api_stub ]] || {
-  echo "[fingerprint/module/shell_api_stub] shell_api_stub not found generating stub" | warn
+  echo "[fingerprint/shell_api_stub] shell_api_stub not found generating stub" | warn
   source $_dot_bootstrap_root_/runtime/generator/shell_api_stub
   return
 }
@@ -13,8 +13,8 @@ done < <(ls $_dot_bootstrap_root_/runtime/shell_api | sort )) | awk '{ print $1 
 local lasthash="$(head -n1 $_dot_bootstrap_root_/generated/shell_api_stub | sed -e 's/^ *# *//g' )"
 
 [[ $livehash == $lasthash ]] || {
-  echo "[fingerprint/module/shell_api_stub] shell_api_stub hash changed" | debug
-  echo "[fingerprint/module/shell_api_stub] livehash : $livehash" | debug
-  echo "[fingerprint/module/shell_api_stub] lastHash : $lasthash" | debug
+  echo "[fingerprint/shell_api_stub] shell_api_stub hash changed" | debug
+  echo "[fingerprint/shell_api_stub] livehash : $livehash" | debug
+  echo "[fingerprint/shell_api_stub] lastHash : $lasthash" | debug
   source $_dot_bootstrap_root_/runtime/generator/shell_api_stub
 }

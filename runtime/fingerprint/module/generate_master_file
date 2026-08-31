@@ -1,4 +1,0 @@
-#!/bin/env zsh
-
-source "$_dot_bootstrap_root_/runtime/generator/generate_master_file"
-state="${state}generate_master_file "

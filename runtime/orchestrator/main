@@ -1,0 +1,18 @@
+#!/bin/env zsh
+
+local state=""
+
+if [[ -d $_dot_bootstrap_root_/generated ]] ; then
+  local _orchestrator_main_start=$EPOCHREALTIME
+  echo "[orchestrator/main] generated exists : revalidating in background" | debug 
+  source "$_dot_bootstrap_root_/runtime/orchestrator/init" &!
+else 
+  [[ -v _orchestrator_main_start ]] && unset _orchestrator_main_start
+  [[ -v SILENT_LOG ]] && {
+    local _main_SILENT_LOG_status=$SILENT_LOG
+    unset SILENT_LOG
+  }
+  echo "[orchestrator/main] generated doesn't exists : generating cache" | error
+  source "$_dot_bootstrap_root_/runtime/orchestrator/init" 
+  [[ -v _main_SILENT_LOG_status ]] && export SILENT_LOG=$_main_SILENT_LOG_status
+fi

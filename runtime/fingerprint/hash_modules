@@ -6,9 +6,9 @@
 
 [[ ! -v activeSource || ! -f $activeSource/module ]] && {
   if [[ -v activeSource ]] ; then
-    echo "[fingerprint/module/hash_modules] activeSource is present but activeSource/module not found" | error
+    echo "[fingerprint/hash_modules] activeSource is present but activeSource/module not found" | error
   else
-    echo "[fingerprint/module/hash_modules] activeSource not found" | warn
+    echo "[fingerprint/hash_modules] activeSource not found" | warn
   fi
   state="${state}hash_modules "
   while read -r module ; do
@@ -20,17 +20,17 @@
 local _hash_modules_state_change=""
 local _modified_modules=""
 while read -r module ; do
-  (( "$(source $_dot_bootstrap_root_/runtime/fingerprint/module/helper/copy_module)" )) || {
+  (( "$(source $_dot_bootstrap_root_/runtime/fingerprint/helper/copy_module)" )) || {
     source $_dot_bootstrap_root_/runtime/generator/module
     _hash_modules_state_change="hash_modules"
     _modified_modules="$_modified_modules $module"
     [[ -z "$generation_error" ]] || {
-      echo "[fingerprint/module/hash_modules] generation_error detected for module $module" | debug
+      echo "[fingerprint/hash_modules] generation_error detected for module $module" | debug
       return
     }
   }
 done < $_dot_bootstrap_root_/generated/$_session_id_/module
 
-echo "[fingerprint/module/hash_modules] $_modified_modules" | debug
+echo "[fingerprint/hash_modules] $_modified_modules" | debug
 state="$state$_hash_modules_state_change "
 unset _hash_modules_state_change _modified_modules

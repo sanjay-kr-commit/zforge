@@ -5,3 +5,4 @@ while read -r module ; do
   local index="$( awk -F ':' '{ print $1 }' <<< "$module" )"
   cat "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
 done < "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted_dependency_sorted"
+state="${state}generate_master_file "

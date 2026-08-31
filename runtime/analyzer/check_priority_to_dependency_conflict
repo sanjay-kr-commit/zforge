@@ -20,3 +20,7 @@ while read -r dependencies ; do
     }
   done < "$dependencies" 
 done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
+
+
+state="${state}check_priority_to_dependency_conflict "
+

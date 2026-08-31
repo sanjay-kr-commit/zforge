@@ -43,3 +43,5 @@ for module in "${mapKey[@]}"; do
 done
 
 unset detectCycle mapKey mapValue
+
+state="${state}check_circular_dependency "

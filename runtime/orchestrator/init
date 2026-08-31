@@ -1,0 +1,56 @@
+#!/bin/env zsh
+
+local generation_error=""
+
+modules_arr=(
+  $_dot_bootstrap_root_/runtime/fingerprint/shell_api_stub
+  $_dot_bootstrap_root_/runtime/fingerprint/add_init
+  $_dot_bootstrap_root_/runtime/fingerprint/check_last_generation
+  $_dot_bootstrap_root_/runtime/fingerprint/module_list
+  $_dot_bootstrap_root_/runtime/fingerprint/hash_modules
+  $_dot_bootstrap_root_/runtime/fingerprint/verify_dependency_presence
+  $_dot_bootstrap_root_/runtime/generator/sort_priority
+  $_dot_bootstrap_root_/runtime/analyzer/check_circular_dependency
+  $_dot_bootstrap_root_/runtime/analyzer/check_priority_to_dependency_conflict
+  $_dot_bootstrap_root_/runtime/generator/sort_dependencies
+  $_dot_bootstrap_root_/runtime/generator/generate_master_file
+  # lots of things remaining
+  $_dot_bootstrap_root_/runtime/generator/publish_latest_snapshot_state
+)
+
+for module in ${modules_arr[@]} ; do 
+  source $module
+  [[ -z $generation_error ]] || {
+    echo "[orchestrator/init] module generation failed" | error
+    echo "[orchestrator/init] at $module" | error
+    echo "[orchestrator/init] due to \"$generation_error\"" | error
+    break
+  }
+  [[ -v no_generation_required ]] && {
+    echo "[orchestrator/init] current and last snapshots are same" | debug
+    break
+  }
+done
+
+[[ -v no_generation_required ]] && {
+  unset no_generation_required
+  return
+}
+
+[[ -z "$generation_error" ]] || {
+  source $_dot_bootstrap_root_/runtime/generator/hash_failure
+}
+
+if [[ -z $generation_error && ! -z $state ]] ; then
+  echo "[orchestrator/init] state changes : \"$state\"" | debug
+  echo "[orchestrator/init] TODO state transition : \"$state\"" | debug
+fi
+
+cp "$_log_dir_/$_session_id_" "$_dot_bootstrap_root_/generated/$_session_id_/generation_log"
+
+if [[ -v _orchestrator_main_start ]] ; then
+  local _orchestrator_main_end=$EPOCHREALTIME
+  printf '[orchestrator/main] background time %.3f ms\n' "$(( (_orchestrator_main_end - _orchestrator_main_start) * 1000 ))" | debug
+  unset _orchestrator_main_start 
+  unset _orchestrator_main_end 
+fi
