@@ -1,59 +1,50 @@
 #!/bin/env zsh
 
-[[ -v mapKey ]] && unset mapKey
-[[ -v mapValue ]] && unset mapValue
+typeset -A indexToWhole
+typeset -A nameToIndex
+typeset -A printed
 
-typeset -a mapKey
-typeset -A mapValue
+# create dict
+while read -r module ; do
+  index="$( awk -F ':' '{ print $1 }' <<< "$module")"
+  indexToWhole["$index"]="$module"
+done <$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted
 
-while read -r dependencies ; do 
-  moduleIndex="${dependencies#$_dot_bootstrap_root_/generated/$_session_id_/scripts/}"
-  moduleIndex="${moduleIndex%/dependencies}"
-  moduleName="$( grep "^$moduleIndex:.*" "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk -F ':' '{ print $2 }' )"
-  mapKey+=("$moduleName")
-  mapValue[$moduleName]="$( cat $dependencies )"
-done < <( find $_dot_bootstrap_root_/generated/$_session_id_/scripts -type f -name 'dependencies')
+while read -r module ; do
+  index="$( awk -F ':' '{ print $1 }' <<< "$module")"
+  name="$( awk -F ':' '{ print $2 }' <<< "$module")"
+  nameToIndex["$name"]="$index"
+done <$_dot_bootstrap_root_/generated/$_session_id_/module
 
-#echo "-- map"
-#for module in "${mapKey[@]}"; do
-#  echo ""
-#  echo "$module : $( echo ${mapValue[$module]} | tr '\n' ' ' )"
-#  for dependentModule in ${(f)mapValue[$module]} ; do 
-#    echo "$dependentModule"
-#  done
-#done
-#  echo ""
-#echo "-- end"
-
-local detectCycle() {
-  echo "${detectCyclePath[@]}" | grep -q ":$1:" && {
-    detectCyclePath+=("-> :$1:")
-    echo "[generator/sort_dependencies] cycle detected" | error
-    echo "[generator/sort_dependencies] \"${detectCyclePath[@]}\"" | error
-    generation_error="[generator/sort_dependencies] cycle detected : \"${detectCyclePath[@]}\""
-    return
-  }
-  detectCyclePath+=("-> :$1:")
-  for dependentModule in ${(f)mapValue[$1]}; do
-    detectCycle "$dependentModule"
-    [[ -z $generation_error ]] || {
-      return
-    }
-  done
+priortisedDependencies() {
+  while read -r dependency ; do 
+    local index="${nameToIndex["$dependency"]}"
+    echo "${indexToWhole["$index"]}"
+  done < "$1"
 }
 
-[[ -v detectCyclePath ]] && unset detectCyclePath
-for module in "${mapKey[@]}"; do
-  typeset -a detectCyclePath
-  detectCycle "$module"
-  unset detectCyclePath
-  [[ -z $generation_error ]] || {
-    unset detectCycle
-    return
+sortedDependencies() {
+  local buffer="$(cat)"
+  grep -E '.+:-[0-9]+$' <<< "$buffer" | sort -t: -k2,2n ;
+  grep -E '.+:\?$' <<< "$buffer" ;
+  grep -E '.+:[0-9]+$' <<< "$buffer" | sort -t: -k2,2n 
+}
+
+processDependency() {
+  local module="$1"
+  local index="$( awk -F ':' '{ print $1 }' <<< "$module" )"
+  [[ -z "${printed["$index"]}" ]] || return
+  [[ -f "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies" ]] && {
+    while read -r dependency; do
+      processDependency "$dependency"
+    done < <(priortisedDependencies "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies" | sortedDependencies)
   }
-done
+  printed["$index"]=1
+  echo "$module"
+}
 
-unset detectCycle
+(while read -r module ; do
+  processDependency "$module"
+done <$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted) > "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted_dependency_sorted"
 
-# no cycle found
-echo "TODO"
+unset indexToWhole nameToIndex printed priortisedDependencies sortedDependencies processDependency 

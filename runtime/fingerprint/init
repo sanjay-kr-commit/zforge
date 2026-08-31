@@ -13,7 +13,7 @@ modules_arr=(
   $_dot_bootstrap_root_/runtime/fingerprint/module/sort_priority
   $_dot_bootstrap_root_/runtime/fingerprint/module/check_circular_dependency
   $_dot_bootstrap_root_/runtime/fingerprint/module/check_priority_to_dependency_conflict
-#  $_dot_bootstrap_root_/runtime/fingerprint/module/sort_dependencies
+  $_dot_bootstrap_root_/runtime/fingerprint/module/sort_dependencies
   # lots of things remaining
   $_dot_bootstrap_root_/runtime/fingerprint/module/publish_latest_snapshot_state
 )
