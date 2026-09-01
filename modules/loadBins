@@ -1,0 +1,17 @@
+#!/bin/zsh
+
+if [[ ! -d $_dot_bootstrap_root_/config/public/loadBin ]] ; then 
+  mkdir -p $_dot_bootstrap_root_/config/public/loadBin 
+  echo \[loadBin\] created path | debug
+fi
+
+export PATH="$PATH:$_dot_bootstrap_root_/config/public/loadBin"
+echo \[loadBin\] loaded path $_dot_bootstrap_root_/config/public/loadBin | debug
+
+if [[ ! -d $_dot_bootstrap_root_/config/private/loadBin ]] ; then 
+  mkdir -p $_dot_bootstrap_root_/config/private/loadBin 
+  echo \[loadBin\] created path | debug
+fi
+
+export PATH="$PATH:$_dot_bootstrap_root_/config/private/loadBin"
+echo \[loadBin\] loaded path $_dot_bootstrap_root_/config/private/loadBin | debug

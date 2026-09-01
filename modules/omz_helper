@@ -1,0 +1,110 @@
+#!/bin/zsh
+
+if [[ ! -d $_dot_bootstrap_root_/config/public/omz_helper ]] ; then 
+  mkdir -p $_dot_bootstrap_root_/config/public/omz_helper 
+fi
+if [[ ! -f $_dot_bootstrap_root_/config/public/omz_helper/plugins ]] ; then 
+  if [[ -f  $_dot_bootstrap_root_/static_config/public/omz_helper/plugins ]] ; then 
+    cp  $_dot_bootstrap_root_/static_config/public/omz_helper/plugins $_dot_bootstrap_root_/config/public/omz_helper/plugins
+    source $_dot_bootstrap_root_/module/omz
+  else 
+    echo "plugins=(" >> $_dot_bootstrap_root_/config/public/omz_helper/plugins 
+    echo ")" >> $_dot_bootstrap_root_/config/public/omz_helper/plugins 
+  fi
+fi
+
+_disable_omz_plugins() {
+  local tmpfile=$(mktemp | sed -e 's#^/tmp#/dev/shm#g')
+  awk "!/^$1$/" $_dot_bootstrap_root_/config/public/omz_helper/plugins > $tmpfile 
+  mv $tmpfile $_dot_bootstrap_root_/config/public/omz_helper/plugins
+}
+_enable_omz_plugins() {
+  local tmpfile=$(mktemp | sed -e 's#^/tmp#/dev/shm#g')
+  awk 'NR>1 { print prev } { prev=$0 }'  $_dot_bootstrap_root_/config/public/omz_helper/plugins > $tmpfile 
+  echo $1 >> $tmpfile
+  echo ")" >> $tmpfile
+  mv $tmpfile $_dot_bootstrap_root_/config/public/omz_helper/plugins
+}
+
+:omz-plugins() {
+  local RED="\e[1;31m"
+  local GREEN=$'\e[1;32m'
+  local RESET="\e[0m"
+  local TICK="✓"
+  local CROSS="✗"
+  local tmpfile=$(mktemp | sed -e 's#^/tmp#/dev/shm#g')
+  set +m
+  (
+    local output=$(omz plugin list) &&
+    local enabled="$(omz plugin list --enabled | awk 'NR>1' | tr '\n' '|' | sed -e 's/|$//g')" &&
+    echo $output| grep -E "($enabled)$" | xargs -I {} sh -c "printf \"${GREEN}$TICK${RESET} \$1\n\"" _ {} &&
+    echo $output| grep -vE "($enabled)$" | xargs -I {} sh -c "printf \"${RED}$CROSS${RESET} \$1\n\"" _ {}
+  ) > $tmpfile &
+
+  local pid=$!
+  local delay=0.1
+  local spin='|/-\'
+  while kill -0 $pid 2>/dev/null; do
+    for i in {1..4}; do
+      printf "\r[%c] Loading..." "${spin[i]}"
+      sleep $delay
+    done
+  done
+  printf "\r               \r"
+  wait $pid
+  set -m
+  output="$( cat $tmpfile )"
+
+  local output=$( echo $output | \
+    fzf --ansi --preview-window=wrap --preview-window=right:85% \
+    --preview \
+    'echo {} ; \
+    des="$( echo {} | awk "{print \$2}" )" ; \
+    if [[ -d  ~/.oh-my-zsh/plugins/$des ]] ; then \
+      if [[ $( ls ~/.oh-my-zsh/plugins/$des| grep -o ".*\.md" | wc -l ) == 0 ]] ; then \
+        echo "No readme"  ; \
+      else \
+        output="$(find  ~/.oh-my-zsh/plugins/$des -regex ".*\.md")" ; \
+        sorted="$(echo $output | grep -o ".*README\.md$")" ; \
+        tail="$(echo $output | grep -o ".*[^README]\.md$" )" ; \
+        if [[ ! -z $sorted && ! -z $tail ]] ; then output="$sorted\n$tail" ;  fi ; \
+        echo $output | \
+        xargs -n 1 sh -c "f=\$1;f=\${f##*/}; echo ---------------------- \$f ---------------------- && cat \$1 " _ | \
+        bat --decorations=never --language=zsh --wrap=auto --color=always ; \
+      fi ; \
+    elif [[  -d ~/.oh-my-zsh/custom/plugins/$des ]] ; then \
+      if [[ $( ls ~/.oh-my-zsh/custom/plugins/$des| grep -o ".*\.md" | wc -l ) == 0 ]] ; then \
+        echo "No readme"  ; \
+      else \
+        output="$(find  ~/.oh-my-zsh/custom/plugins/$des -regex ".*\.md")" ; \
+        sorted="$(echo $output | grep -o ".*README\.md$")" ; \
+        tail="$(echo $output | grep -o ".*[^README]\.md$" )" ; \
+        if [[ ! -z $sorted && ! -z $tail ]] ; then output="$sorted\n$tail" ;  fi ; \
+        echo $output | \
+        xargs -n 1 sh -c "f=\$1;f=\${f##*/}; echo ---------------------- \$f ---------------------- && cat \$1 " _ | \
+        bat --decorations=never --language=zsh --wrap=auto --color=always ; \
+      fi ; \
+    else \
+      echo "No readme"  ; \
+      fi ')
+  if [[ -z $output ]] ; then return ; fi
+  if [[ $( echo $output | awk '{ print $1 }' ) == $CROSS ]] ; then 
+    _enable_omz_plugins $( echo $output | awk '{print $2}' )
+  else
+    _disable_omz_plugins $( echo $output | awk '{print $2}' )
+  fi
+  source $_dot_bootstrap_root_/module/omz
+}
+
+:omz-take-snapshot() {
+  if [[ ! -d $_dot_bootstrap_root_/static_config/public/omz_helper ]] ; then 
+    mkdir -p $_dot_bootstrap_root_/static_config/public/omz_helper
+  fi
+  cp $_dot_bootstrap_root_/config/public/omz_helper/plugins $_dot_bootstrap_root_/static_config/public/omz_helper/plugins
+}
+
+:omz-take-snapshot() {
+  if [[ -f $_dot_bootstrap_root_/static_config/public/omz_helper/plugins ]] ; then 
+    rm $_dot_bootstrap_root_/static_config/public/omz_helper/plugins 
+  fi
+}

@@ -1,0 +1,101 @@
+#!/bin/zsh
+# @d -> loadBins
+
+# is the variable isn't set it's being source by dotconfig
+if [[ ! -v _GIT_PASS_PATH_TO_SCRIPT ]] ; then 
+  _GIT_PASS_PATH_TO_SCRIPT=${(%):-%N}
+  if [[ ! -x $_GIT_PASS_PATH_TO_SCRIPT ]]; then
+    echo \[gitPass\] made the script executable | debug
+    chmod +x $_GIT_PASS_PATH_TO_SCRIPT
+  fi
+fi
+
+# this variable means it's acting as a GIT_ASKPASS
+if [[ -v _GIT_PASS_ACT_AS_ASKSCRIPT ]] ; then 
+  case "$1" in
+    *Username*) echo "$user_name" ;;
+    *Password*) echo "$( grep -o "$user_name.*" $_dot_bootstrap_root_/config/private/gitPass/userconfigs | awk '{print $3}' )" ;;
+  esac
+  return
+fi
+
+
+git() {
+  # for faster autocomplete
+  if [[ -o interactive ]] && [[ -n $compstate ]]; then
+    command /usr/bin/git "$@"
+    return
+  fi
+  local actualGit="/usr/bin/git"
+  export user_name="$( $actualGit remote get-url origin | \
+    sed -e 's#https://##g' | \
+    sed -e 's#^[^/]*/##g' | \
+    sed -e 's#/.*##g' )"
+  local userconfig=""
+  if [[ -f $_dot_bootstrap_root_/config/private/gitPass/userconfigs ]] ; then
+    userconfig="$( grep "$user_name.*" $_dot_bootstrap_root_/config/private/gitPass/userconfigs )"
+  else
+    echo \[gitPass\] userconfig not found creating empty file | error
+    mkdir -p $_dot_bootstrap_root_/config/private/gitPass
+    touch $_dot_bootstrap_root_/config/private/gitPass/userconfigs
+  fi
+  if [[ -z $userconfig ]] ; then 
+    echo \[gitPass\] user config for $user_name not found executing git normally | error
+    user_name="$(cat ~/.gitconfig | grep -o "name.*" | sed -e "s#name.*= *##g" | grep -o '[^ ]*')"
+    user_email="$(cat ~/.gitconfig | grep -o "email.*" | sed -e "s#email.*= *##g" | grep -o '[^ ]*')"
+    $actualGit config user.name \"$user_name\"
+    $actualGit config user.email \"$user_email\"
+    $actualGit $*
+  else
+    local user_email="$( echo $userconfig | awk '{ print $2 }' )"
+    echo \[gitPass\] username $user_name | debug
+    echo \[gitPass\] user_email $user_email | debug
+    #local user_key="$( echo $userconfig | awk '{ print $3 }' )"
+    $actualGit config user.name \"$user_name\"
+    $actualGit config user.email \"$user_email\"
+    # automate password prompt
+    export _GIT_PASS_ACT_AS_ASKSCRIPT=1
+    GIT_ASKPASS=$_GIT_PASS_PATH_TO_SCRIPT \
+    GIT_TERMINAL_PROMPT=0 \
+    $actualGit $*
+    unset _GIT_PASS_ACT_AS_ASKSCRIPT
+    unset user_key 
+  fi
+  unset user_email
+  unset user_name
+  unset userconfig
+}
+
+:addGitUser() {
+  echo -n "Enter username : "
+  local user_name="$(read -re)"
+  echo -n "Enter email : "
+  local user_email="$(read -re)"
+  echo -n "Enter auth-key : "
+  local authkey="$(read -se)"
+  echo ""
+  awk "!/^$user_name .*/" $_dot_bootstrap_root_/config/private/gitPass/userconfigs > $_dot_bootstrap_root_/config/private/gitPass/userconfigs_new
+  echo "$user_name $user_email $authkey" >> $_dot_bootstrap_root_/config/private/gitPass/userconfigs_new
+  mv $_dot_bootstrap_root_/config/private/gitPass/userconfigs_new $_dot_bootstrap_root_/config/private/gitPass/userconfigs
+}
+
+:listGitUser() {
+  echo "username email auth-key\n" | \
+    cat - $_dot_bootstrap_root_/config/private/gitPass/userconfigs | \
+    awk '{
+      printf "\033[32m%-25s\033[0m ", $1;
+      printf "\033[33m%-25s\033[0m ", $2;
+      printf "\033[31m%-25s\033[0m\n", $3;
+    }' | bat -l txt | less
+}
+
+:removeGitUser() {
+  local output="$(cat $_dot_bootstrap_root_/config/private/gitPass/userconfigs | \
+    awk '{ print $1 }' | \
+    fzf )"
+  if [[ $output == "" ]] ; then 
+    return 
+  fi
+  awk "!/^$output .*/" $_dot_bootstrap_root_/config/private/gitPass/userconfigs > $_dot_bootstrap_root_/config/private/gitPass/userconfigs_new
+  mv $_dot_bootstrap_root_/config/private/gitPass/userconfigs_new $_dot_bootstrap_root_/config/private/gitPass/userconfigs
+}

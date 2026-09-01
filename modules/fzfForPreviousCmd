@@ -1,0 +1,45 @@
+#!/bin/zsh
+fzf-history-widget() {
+  local cmd
+  cmd=$( fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | fzf --preview-window=wrap --preview 'echo {} | bat --decorations=never --language=zsh --wrap=auto --color=always')
+  if [[ -n $cmd ]]; then
+    BUFFER=$( printf "%b" "$cmd" )
+    CURSOR=${#BUFFER}
+  fi
+}
+
+fzf-smart-widget-up-arrow() {
+  buff="$( echo $BUFFER | grep -o "[^ ].*" )"
+  if [[ -z $buff ]] ; then
+    fzf-history-widget
+  else
+    local cmd
+    local entries
+    entries=$(fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | grep -o "$buff.*" )
+    if [[ ! -z "$entries" ]] ; then 
+      cmd=$( fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | grep -o "$buff.*"  | fzf --preview-window=wrap --preview 'echo {} | bat --decorations=never --language=zsh --wrap=auto --color=always')
+      if [[ -n $cmd ]]; then
+        BUFFER=$( printf "%b" "$cmd" )
+        CURSOR=${#BUFFER}
+      fi
+    fi
+  fi
+}
+
+#fzf-smart-widget-down-arrow() {
+#  buff="$( echo $BUFFER | grep -o "[^ ].*" )"
+#  echo "buff"
+#  if [[ ! -z $buff ]] ; then 
+#    echo "inside buff"
+#    local cmd
+#    local entries
+#    entries=$(fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | awk "{ if ( seen[$buff] > 0 ) { print } ; seen[\$0]++ }" | fzf --preview-window=wrap --preview 'echo {} | bat --decorations=never --language=zsh --wrap=auto --color=always'  )
+#  fi
+#}
+
+zle -N fzf-history-widget
+bindkey '^R' fzf-history-widget
+zle -N fzf-smart-widget-up-arrow
+bindkey "${terminfo[kcuu1]}" fzf-smart-widget-up-arrow
+#zle -N fzf-smart-widget-down-arrow
+#bindkey "${terminfo[kcud1]}" fzf-smart-widget-down-arrow

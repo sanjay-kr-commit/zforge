@@ -1,0 +1,18 @@
+#!/bin/zsh
+# @d -> env_flags
+# home brew path export
+if [[ ! -d "/home/linuxbrew" ]] ; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  clear
+fi
+
+export PATH=$PATH:/home/linuxbrew/.linuxbrew/bin
+export HOMEBREW_NO_ENV_HINTS=true
+
+if type brew &>/dev/null
+then
+  FPATH="$(brew --prefix)/share/zsh/site-functions:${FPATH}"
+  autoload -Uz compinit
+  compinit
+fi
+

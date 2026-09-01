@@ -1,0 +1,64 @@
+#!/bin/env bash
+# @p -> -100
+
+if [[ ! -f $HOME/.tmux.conf ]]; then
+  cp $_dot_bootstrap_root_/static_config/public/tmux_terminal/tmux.conf $HOME/.tmux.conf
+fi
+
+notifySessionStatusAndExitTmux() {
+  if [[ "$(tmux ls | grep $sessionId | wc -l)" == "0" ]]; then
+    notify-send -t 10000 --app-name="Tmux" "$sessionId exited"
+  else
+    notify-send -t 10000 --app-name="Tmux" "$sessionId detached"
+  fi
+  exit
+}
+
+if [[ ! -v TMUX ]] && [[ ! -f /dev/shm/shutdowntmuxsession ]]; then
+  tmuxls="$(tmux ls 2>/dev/null)"
+  if [ -z $tmuxls ]; then
+    sessionId="session 1"
+    tmux -u new -s "session 1" && notifySessionStatusAndExitTmux
+  else
+    sessionCount="$(echo $tmuxls | wc -l)"
+    sessionId=$((sessionCount + 1))
+    detachedSessionCount="$(echo $tmuxls | grep "(attached)" | wc -l)"
+    detachedSessionCount=$((sessionCount - $detachedSessionCount))
+    detchedSessionFound=false
+    # look for detached session
+    if [[ $detachedSessionCount != "0" ]]; then
+      while read -r line; do
+        if [[ "$(echo $line | grep "attached" | wc -l)" == 0 ]]; then
+          # found detched session
+          sessionId=$(echo $line | grep -o 'session [0-9a-zA-Z]*')
+          detchedSessionFound=true
+        fi
+      done <<<$tmuxls
+    fi
+    if [[ $detchedSessionFound == true ]]; then
+      if [[ "$detachedSessionCount" != "0" ]]; then
+        notify-send -t 10000 --app-name="Tmux" "$detachedSessionCount detached sessions found"
+      fi
+      notify-send -t 10000 --app-name="Tmux" "Reattached $sessionId"
+      tmux -u attach -t $sessionId && notifySessionStatusAndExitTmux
+    fi
+    # look lower number that might be available
+    while [ $sessionId -gt 0 ] && [ "$(echo $tmuxls | grep "session $sessionId" | wc -l)" != "0" ]; do
+      sessionId=$((sessionId - 1))
+    done
+    # look for new session number
+    if [[ $sessionId == "0" ]]; then
+      sessionId=$((sessionCount + 1))
+      while [ "$(echo $tmuxls | grep "session $sessionId" | wc -l)" != "0" ]; do
+        sessionId=$((sessionId + 1))
+      done
+    fi
+    sessionId="session $sessionId"
+    tmux -u new -s $sessionId && notifySessionStatusAndExitTmux
+  fi
+fi
+
+if [ ! -d "$HOME/.tmux/plugins/tpm" ] && [ ! -v TMUX ]; then
+  git clone https://github.com/tmux-plugins/tpm ~/.tmux/plugins/tpm
+  tmux source ~/.tmux.conf
+fi

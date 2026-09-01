@@ -1,0 +1,3 @@
+#!/bin/zsh
+# @p->1001
+pokemon-colorscripts-go --no-title | fastfetch --file -

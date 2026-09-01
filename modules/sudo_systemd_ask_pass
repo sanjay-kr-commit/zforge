@@ -1,0 +1,36 @@
+#!/bin/zsh
+
+# this variable means it's acting as a SUDO_ASKPASSASK
+if [[ -v _SUDO_PASS_ACT_AS_ASKSCRIPT ]] ; then 
+  systemd-ask-password "$1"
+  return
+fi
+
+# if the variable isn't set it's being source by dotconfig
+if [[ ! -v _SUDO_PASS_PATH_TO_SCRIPT ]] ; then 
+  _SUDO_PASS_PATH_TO_SCRIPT=${(%):-%N}
+  if [[ ! -x $_SUDO_PASS_PATH_TO_SCRIPT ]]; then
+    echo \[sudo_systemd_ask_pass\] made the script executable | debug
+    chmod +x $_SUDO_PASS_PATH_TO_SCRIPT
+  fi
+fi
+
+sudo() {
+  actualSudo='/usr/bin/sudo'
+  export _SUDO_PASS_ACT_AS_ASKSCRIPT=1
+  SUDO_ASKPASS=$_SUDO_PASS_PATH_TO_SCRIPT \
+  $actualSudo -A "$@"
+  local ret=$?
+  unset _SUDO_PASS_ACT_AS_ASKSCRIPT
+  return $ret
+}
+
+sudoedit() {
+  actualSudo='/usr/bin/sudoedit'
+  export _SUDO_PASS_ACT_AS_ASKSCRIPT=1
+  SUDO_ASKPASS=$_SUDO_PASS_PATH_TO_SCRIPT \
+  $actualSudo -A "$@"
+  local ret=$?
+  unset _SUDO_PASS_ACT_AS_ASKSCRIPT
+  return $ret
+}

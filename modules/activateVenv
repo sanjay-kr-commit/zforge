@@ -1,0 +1,63 @@
+#!/bin/env zsh
+# @d -> gitPass
+
+local RED='\033[31m'
+local GREEN='\033[32m'
+local RESET='\033[0m'
+
+local processVenvpath() {
+  local activationPath="$( echo $1 | sed -e 's/\/pyvenv\.cfg//g' )/bin/activate"
+  echo "${RED}> Activating : $(simpleName $1)$RESET"
+  if ! [[ -f $activationPath  ]] ; then
+    echo -e "${RED}Activation path not found$RESET"
+  else 
+    source "$activationPath"
+  fi
+}
+
+local simpleName() {
+  echo "$(echo "$1" | grep -o "[a-zA-Z0-9]*/pyvenv.cfg" | grep -o "[a-zA-Z0-9]*/" | xargs -I {} echo {} | sed -e 's/\///g')"
+}
+
+local selectPathToActivate() {
+  local count=1;
+  echo "More than one venv found : "
+  for i in ${venvpath} ; do 
+    echo -e "${GREEN}> $count $(simpleName $i)$RESET"
+    count=$((count+1))
+  done
+  echo -n "${GREEN}choose one :$RESET "
+  read -r choice
+  if [[ $choice -gt ${#venvpath} ]] || [[ $choice -lt 1 ]] ; then
+    echo -e "${RED}Invalid choice$RESET" 
+  else
+    processVenvpath "${venvpath[choice]}"
+  fi
+}
+
+activateVenv() {
+
+  local venvpath=($(find . -maxdepth 2 -type f -name "pyvenv.cfg" | xargs -I {} realpath {}))
+  local count="${#venvpath}"
+  
+  if [[ $count -eq 0 ]] ; then 
+    echo "No venv found"
+  elif [[ $count -eq 1 ]] ; then 
+    processVenvpath ${venvpath[1]}
+  else
+    selectPathToActivate
+  fi
+
+}
+
+venvrun() {
+  activateVenv
+  if  [[ "$(type deactivate)" != "deactivate not found" ]] ; then 
+    echo -e "${GREEN}> Executing : $* $RESET"
+    eval $*
+    echo -e "${GREEN}> Deactivating venv $RESET"
+    deactivate
+  else 
+    echo -e "${RED}> venv activation failed $RESET"
+  fi 
+}

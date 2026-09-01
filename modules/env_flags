@@ -1,0 +1,103 @@
+#!/bin/zsh
+
+# @f-> USE_RAM_FOR_TEMP_ENV_FILE
+
+if [[ -f $_dot_bootstrap_root_/config/public/env_flags/ENV_FLAGS  ]] ; then 
+  source $_dot_bootstrap_root_/config/public/env_flags/ENV_FLAGS
+  echo \[env_flags\] sourced public ENV_FLAGS config file | debug
+else
+  echo \[env_flags\] no public env found : ENV_FLAGS config file missing | warn
+  mkdir -p $_dot_bootstrap_root_/config/public/env_flags/
+  touch $_dot_bootstrap_root_/config/public/env_flags/ENV_FLAGS
+  echo \[env_flags\] created public ENV_FLAGS config file | warn
+fi
+
+if [[ -f $_dot_bootstrap_root_/config/private/env_flags/ENV_FLAGS  ]] ; then 
+  source $_dot_bootstrap_root_/config/private/env_flags/ENV_FLAGS
+  echo \[env_flags\] sourced private ENV_FLAGS config file | debug
+else
+  echo \[env_flags\] no private env found : ENV_FLAGS config file missing | warn
+  mkdir -p $_dot_bootstrap_root_/config/private/env_flags/
+  touch $_dot_bootstrap_root_/config/private/env_flags/ENV_FLAGS
+  echo \[env_flags\] created private ENV_FLAGS config file | warn
+fi
+
+_env_modify_entry() {
+  # $1 is original file 
+  # $2 is temp file
+  # $3 is env entry
+  # $4 is export flag
+  if [[ -f $2 ]] ; then 
+    rm $2
+  fi
+  touch $2
+  local name="$( echo $3 | grep -o "^[^=]\+" )" 
+  local foundEntry=0
+  while read -r entry ; do 
+    local entryname="$( echo $entry | sed -e 's/export \+//g' | grep -o "^[^=]\+" )"
+    if [[ $entryname != $name ]] ; then
+      echo $entry >> $2
+    else
+      local foundEntry=$entry
+    fi
+  done < $1
+  if [[ $4 == 1 ]] ; then 
+    local newentry="export $3"
+  else
+    local newentry=$3
+  fi
+  echo $newentry >> $2
+  mv $2 $1
+  if [[ $foundEntry == 0 ]]; then
+    echo "-> added entry"
+  else
+    echo "-> replaced entry : $foundEntry"
+  fi
+}
+
+:env-flags() {
+
+  local _filePath_env_flag=$_dot_bootstrap_root_/config/public/env_flags/ENV_FLAGS
+  local _export_env_flag=0
+
+  while ! [[ -z "$1" ]] && [[ "$1" =~ "^-" ]] ; do 
+    case "$1" in
+      -e) echo "-> export"
+        local _export_env_flag=1
+      ;;
+      -p) echo "-> private"
+        local _filePath_env_flag=$_dot_bootstrap_root_/config/private/env_flags/ENV_FLAGS
+      ;;
+      *) echo invalid option $1 
+      ;;
+    esac
+    shift
+  done
+ 
+  if [[ $# == 0 ]] ; then 
+    nvim $_filePath_env_flag
+    unset _filePath_env_flag
+    unset _export_env_flag
+    return
+  fi
+
+  if [[ -v USE_RAM_FOR_TEMP_ENV_FILE ]] ; then 
+    _tempfile_env_flag="/dev/shm/$(head -c 200 /dev/urandom | tr -dc 'a-zA-Z0-9' )"
+  else
+    _tempfile_env_flag="$_filePath_env_flag$(head -c 200 /dev/urandom | tr -dc 'a-zA-Z0-9' )"
+  fi
+
+  # processing flags 
+  for env in "$@"
+  do 
+    if [[ $( echo $env | grep -o "[^=]\+=[^=]\+" ) == $env ]] ; then
+      echo "-> valid env expression   : \"$env\""
+      _env_modify_entry $_filePath_env_flag $_tempfile_env_flag $env $_export_env_flag
+    else
+      echo "-> invalid env expression : \"$env\""
+    fi
+  done
+
+  unset _filePath_env_flag
+  unset _export_env_flag
+}
