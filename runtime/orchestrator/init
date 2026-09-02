@@ -14,7 +14,7 @@ modules_arr=(
   "$_dot_bootstrap_root_/runtime/analyzer/check_priority_to_dependency_conflict"
   "$_dot_bootstrap_root_/runtime/generator/sort_dependencies"
   "$_dot_bootstrap_root_/runtime/generator/generate_master_file"
-  # lots of things remaining
+  "$_dot_bootstrap_root_/runtime/generator/merge_flags"
   "$_dot_bootstrap_root_/runtime/generator/publish_latest_snapshot_state"
 )
 
