@@ -1,10 +1,4 @@
 #!/bin/env zsh 
 
-# for backward compatibility we'll maintain this for some time 
-sha256sum "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk '{ print $1 }' > "$_dot_bootstrap_root_/generated/last_generation"
-echo "$_session_id_" | awk '{ print $1 }' >> "$_dot_bootstrap_root_/generated/last_generation"
-# end here
-
 echo "$_session_id_:$(sha256sum "$_dot_bootstrap_root_/generated/$_session_id_/module" | awk '{ print $1 }')" >> "$_dot_bootstrap_root_/generated/snapshots"
-
 state="${state}publish_latest_snapshot_state "

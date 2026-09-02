@@ -43,7 +43,6 @@ done
 
 if [[ -z "$generation_error" && ! -z "$state" ]] ; then
   echo "[orchestrator/init] state changes : \"$state\"" | debug
-  echo "[orchestrator/init] TODO state transition : \"$state\"" | debug
 fi
 
 cp "$_log_dir_/$_session_id_" "$_dot_bootstrap_root_/generated/$_session_id_/generation_log"

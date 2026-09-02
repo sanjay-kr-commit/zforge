@@ -1,0 +1,6 @@
+#!/bin/env zsh
+
+[[ -f "$_dot_bootstrap_root_/generated/snapshots_$_session_id_" ]] && rm "$_dot_bootstrap_root_/generated/snapshots_$_session_id_"
+awk "!/^$snapshot_entry/" "$_dot_bootstrap_root_/generated/snapshots" >> "$_dot_bootstrap_root_/generated/snapshots_$_session_id_"
+echo "$snapshot_entry" >> "$_dot_bootstrap_root_/generated/snapshots_$_session_id_"
+mv "$_dot_bootstrap_root_/generated/snapshots_$_session_id_" "$_dot_bootstrap_root_/generated/snapshots"
