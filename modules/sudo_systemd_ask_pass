@@ -1,5 +1,5 @@
 #!/bin/zsh
-
+# @nomerge
 # this variable means it's acting as a SUDO_ASKPASSASK
 if [[ -v _SUDO_PASS_ACT_AS_ASKSCRIPT ]] ; then 
   systemd-ask-password "$1"

@@ -1,5 +1,4 @@
 #!/bin/zsh
-# @d -> loadBins
 # @nomerge
 
 # is the variable isn't set it's being source by dotconfig

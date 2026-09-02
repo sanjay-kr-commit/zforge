@@ -1,5 +1,4 @@
 #!/bin/env zsh
-# @d -> gitPass
 
 local RED='\033[31m'
 local GREEN='\033[32m'
