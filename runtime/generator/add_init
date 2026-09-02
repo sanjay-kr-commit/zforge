@@ -1,4 +1,5 @@
 #!/bin/env zsh
 echo '#!/bin/env zsh
-source "$_dot_bootstrap_root_/generated/$( tail -n1 "$_dot_bootstrap_root_/generated/snapshots" | cut -d":" -f1 )/master"
+export _zforge_active_snapshot_="$( tail -n1 "$_dot_bootstrap_root_/generated/snapshots" | cut -d":" -f1 )"
+source "$_dot_bootstrap_root_/generated/$_zforge_active_snapshot_/master"
 ' >> "$_dot_bootstrap_root_/generated/init"
