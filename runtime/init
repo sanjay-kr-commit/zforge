@@ -21,8 +21,3 @@ fi
 
 local _init_end=$EPOCHREALTIME
 printf '[init] foreground time %.3f ms\n' "$(( (_init_end - _init_start) * 1000 ))" | debug
-
-
-if [[ $1 == "--log" ]]; then
-  :log
-fi
