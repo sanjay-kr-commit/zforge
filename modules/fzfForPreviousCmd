@@ -15,9 +15,9 @@ fzf-smart-widget-up-arrow() {
   else
     local cmd
     local entries
-    entries=$(fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | grep -o "$buff.*" )
+    entries=$(fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | grep -F "$buff" )
     if [[ ! -z "$entries" ]] ; then 
-      cmd=$( fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | grep -o "$buff.*"  | fzf --preview-window=wrap --preview 'echo {} | bat --decorations=never --language=zsh --wrap=auto --color=always')
+      cmd=$( fc -l 1 | sed 's/^[ ]*[0-9]*[ ]*//' | tac | awk '{ if ( seen[$0]++ == 0 ) { print }}' | grep -F "$buff"  | fzf --preview-window=wrap --preview 'echo {} | bat --decorations=never --language=zsh --wrap=auto --color=always')
       if [[ -n $cmd ]]; then
         BUFFER=$( printf "%b" "$cmd" )
         CURSOR=${#BUFFER}
