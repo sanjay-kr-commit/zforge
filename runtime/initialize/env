@@ -1,8 +1,18 @@
 #!/bin/env zsh
 
-export _dot_bootstrap_pid_=$$
+export _dot_bootstrap_pid_="$$"
 export _dot_bootstrap_root_="$( dirname -- $( dirname -- $(dirname -- $(realpath ${(%):-%N}))))"
 export _session_id_="$EPOCHREALTIME"
-export _log_dir_="/dev/shm/logger"
-export SILENT_LOG=1
-export LOGERROR=1
+if [[ -d "/dev/shm" ]] ; then
+  export _log_dir_="/dev/shm/logger"
+else
+  export _log_dir_="$_dot_bootstrap_root_/generated/logger"
+fi
+
+# load runtime flags
+[[ -f "$_dot_bootstrap_root_/config/bootflags" ]] && {
+  while read -r flag ; do
+    [[ -z "$flag" ]] && continue
+    eval "export $flag=1"
+  done <"$_dot_bootstrap_root_/config/bootflags"
+}

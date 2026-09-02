@@ -26,7 +26,7 @@ trap on_logger_exit EXIT INT TERM
 
 export error() {
   local input=$(cat)
-  if [[ -v LOGERROR ]] ; then
+  if [[ -v LOGALL ]] || [[ -v LOGERROR ]] ; then
     printf "${RED}[ERROR]${RESET} %s\n" "$input" >&$logger
     [[ -v SILENT_LOG ]] || printf "${RED}[ERROR]${RESET} %s\n" "$input" >&2
   fi
@@ -34,7 +34,7 @@ export error() {
 
 export warn() {
   local input=$(cat)
-  if [[ -v LOGERROR ]] || [[ -v LOGWARN ]] ; then
+  if [[ -v LOGALL ]] || [[ -v LOGWARN ]] ; then
     printf "${YELLOW}[WARN]${RESET} %s\n" "$input" >&$logger
     [[ -v SILENT_LOG ]] || printf "${YELLOW}[WARN]${RESET} %s\n"  "$input" >&2
   fi
@@ -42,7 +42,7 @@ export warn() {
 
 export debug() {
   local input=$(cat)
-  if [[ -v LOGERROR ]] || [[ -v LOGWARN ]] || [[ -v LOGDEBUG ]] ; then
+  if [[ -v LOGALL ]] || [[ -v LOGDEBUG ]] ; then
     printf "${BLUE}[DEBUG]${RESET} %s\n" "$input" >&$logger
     [[ -v SILENT_LOG ]] || printf "${BLUE}[DEBUG]${RESET} %s\n" "$input" 
   fi

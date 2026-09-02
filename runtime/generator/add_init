@@ -1,5 +1,11 @@
 #!/bin/env zsh
 echo '#!/bin/env zsh
 export _zforge_active_snapshot_="$( tail -n1 "$_dot_bootstrap_root_/generated/snapshots" | cut -d":" -f1 )"
+[[ -f "$_dot_bootstrap_root_/config/flags" ]] && {
+  while read -r flag ; do
+    [[ -z "$flag" ]] && continue
+    eval "export $flag=1"
+  done <"$_dot_bootstrap_root_/config/flags"
+}
 source "$_dot_bootstrap_root_/generated/$_zforge_active_snapshot_/master"
 ' >> "$_dot_bootstrap_root_/generated/init"

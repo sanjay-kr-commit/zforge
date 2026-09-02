@@ -1,74 +1,78 @@
 #!/bin/zsh
 
-_dot_flag_enable() {
-  "$_dot_bootstrap_root_/runtime/logger" debug "Enable Flag : $1"
-  echo "$1" >> "$_dot_bootstrap_root_/config/FLAGS"
-  export $1=1
-}
-
-_dot_flag_disable() {
-  "$_dot_bootstrap_root_/runtime/logger" debug "Disable Flag : $1"
-  if [[ -f "$_dot_bootstrap_root_/config/FLAGS_$1" ]] ; then
-    rm "$_dot_bootstrap_root_/config/FLAGS_$1"
-  fi
-  touch "$_dot_bootstrap_root_/config/FLAGS_$1"
-  while read -r line; do
-    if [[ "$line" != "$1" ]] ; then
-      echo "$line" >> "$_dot_bootstrap_root_/config/FLAGS_$1"
-    fi
-  done < "$_dot_bootstrap_root_/config/FLAGS"
-  mv "$_dot_bootstrap_root_/config/FLAGS_$1" "$_dot_bootstrap_root_/config/FLAGS"
-  unset "$1"
-}
-
-:listFlags() {
+_listFlags() {
   local RED="\e[1;31m"
   local GREEN=$'\e[1;32m'
   local RESET="\e[0m"
   local TICK="✓"
   local CROSS="✗"
-  local output="$(while read -r line ; do 
-    if [[ "$(grep -o "$line" "$_dot_bootstrap_root_/config/FLAGS")" == $line ]] ; then
+  # bootflags
+  local _is_config_bootflags_=""
+  [[ -f "$_dot_bootstrap_root_/config/bootflags" ]] && local _is_config_bootflags_="1"
+  while read -r bootflag; do
+    [[ -z "$bootflag" ]] && continue
+    if [[ ! -z "$_is_config_bootflags_" && ! -z "$(grep -F "$bootflag" "$_dot_bootstrap_root_/config/bootflags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
-    echo "$line"
-  done < "$_dot_bootstrap_root_/runtime/LIST_OF_FLAGS" )" 
-  for line in $( echo "$_dot_dynamic_flags" | tr '\n' ' ') ; do
-    if [[ -z $line ]] ; then
-      continue
-    fi
-    output+="\n$(if [[ "$(grep -o "$line" "$_dot_bootstrap_root_/config/FLAGS")" == "$line" ]] ; then
+    echo "b: $bootflag"
+  done <"$_dot_bootstrap_root_/runtime/share/bootflags"
+  unset _is_config_bootflags_
+  # dynamic flags
+  local _is_config_dynamicflags_=""
+  [[ -f "$_dot_bootstrap_root_/config/flags" ]] && local _is_config_dynamicflags_="1"
+  while read -r dynamicflag; do
+    [[ -z "$dynamicflag" ]] && continue
+    if [[ ! -z "$_is_config_dynamicflags_" && ! -z "$(grep -F "$dynamicflag" "$_dot_bootstrap_root_/config/flags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
-    echo "$line")"
-  done
-
-  if [[ -v DISABLE_DOT_LIST_PAGER ]] ; then
-    echo $output
-  else 
-    echo $output | less 
-  fi
+    echo "d: $dynamicflag"
+  done <"$_dot_bootstrap_root_/generated/$_zforge_active_snapshot_/flags"
+  unset _is_config_dynamicflags_
 }
 
-:flag() {
+:listFlags(){
+  _listFlags | less
+}
+
+_dot_flag_disable() {
+  local flag="$( awk '{ print $2 }' <<< "$1" )"
+  if [[ "$( awk '{ print $1 }' <<< "$1" )" == "b:" ]] ; then
+    awk "!/^$flag/" "$_dot_bootstrap_root_/config/bootflags" > "$_dot_bootstrap_root_/config/bootflags.temp"
+    mv "$_dot_bootstrap_root_/config/bootflags.temp" "$_dot_bootstrap_root_/config/bootflags"
+  else
+    awk "!/^$flag/" "$_dot_bootstrap_root_/config/flags" > "$_dot_bootstrap_root_/config/flags.temp"
+    mv "$_dot_bootstrap_root_/config/flags.temp" "$_dot_bootstrap_root_/config/flags"
+  fi
+  eval "unset \"$flag\""
+}
+
+_dot_flag_enable() {
+  local flag="$( awk '{ print $2 }' <<< "$1" )"
+  if [[ "$( awk '{ print $1 }' <<< "$1" )" == "b:" ]] ; then
+    echo "$flag" >> "$_dot_bootstrap_root_/config/bootflags"
+  else
+    echo "$flag" >> "$_dot_bootstrap_root_/config/flags"
+  fi
+  eval "export \"$flag\"=1"
+}
+
+:flags() {
   local RED="\e[1;31m"
   local RESET="\e[0m"
   local CROSS="✗"
-  DISABLE_DOT_LIST_PAGER=1
   while true ; do
-    local output="$( :listFlags | {cat; echo "${RED}quit${RESET}" ;} | fzf --ansi)"
-    if [[ $output == "" ]] || [[ $output == "quit" ]] ; then
+    local output="$( _listFlags | {cat; echo "${RED}quit${RESET}" ;} | fzf --ansi)"
+    if [[ "$output" == "" ]] || [[ "$output" == "quit" ]] ; then
       return
     fi
-    if [[ "$(echo $output| awk '{ print $1 }')" == $CROSS ]] ; then
-      _dot_flag_enable "$(echo $output | awk '{ print $2 }')"
+    if [[ "$( awk '{ print $1 }' <<< "$output" )" == "$CROSS" ]] ; then
+      _dot_flag_enable "$(echo $output | awk '{ print $2 " " $3 }')"
     else
-      _dot_flag_disable "$(echo $output | awk '{ print $2 }')"
+      _dot_flag_disable "$(echo $output | awk '{ print $2 " " $3 }')"
     fi
   done
-  unset DISABLE_DOT_LIST_PAGER
 }
