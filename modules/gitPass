@@ -1,5 +1,6 @@
 #!/bin/zsh
 # @d -> loadBins
+# @nomerge
 
 # is the variable isn't set it's being source by dotconfig
 if [[ ! -v _GIT_PASS_PATH_TO_SCRIPT ]] ; then 

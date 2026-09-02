@@ -41,6 +41,12 @@ dependencies="$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_depende
   echo "$dependencies" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies"
 }
 
+[[ -z "$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_nomerge" "$_dot_bootstrap_root_/modules/$name" )" ]] || {
+  echo "[generator/module] module '$name' : this module shouldn't be merged" | debug
+  touch "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/nomerge"
+}
+
+
 grep -q '^# *@nolazy' "$_dot_bootstrap_root_/modules/$name" && {
   echo "[generator/module] copying $name @nolazy tag found" | debug
   cat "$_dot_bootstrap_root_/modules/$name" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
@@ -66,5 +72,10 @@ lazy_funcs=( ${(f)"$("$_dot_bootstrap_root_/runtime/analyzer/lazy_funcs" "$_dot_
 
 echo "[generator/module] lazy func found for $name : $lazy_funcs" | debug
 "$_dot_bootstrap_root_/runtime/generator/helper/extract_func" "$_dot_bootstrap_root_/modules/$name" "${lazy_funcs[@]}" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs"
-"$_dot_bootstrap_root_/runtime/generator/helper/remove_func" "$_dot_bootstrap_root_/modules/$name" "${lazy_funcs[@]}" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
+if [[ -f "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/nomerge" ]] ; then
+  head -n1 "$_dot_bootstrap_root_/modules/$name" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"  
+  "$_dot_bootstrap_root_/runtime/generator/helper/remove_func" "$_dot_bootstrap_root_/modules/$name" "${lazy_funcs[@]}" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" >> "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main" 
+else
+  "$_dot_bootstrap_root_/runtime/generator/helper/remove_func" "$_dot_bootstrap_root_/modules/$name" "${lazy_funcs[@]}" | "$_dot_bootstrap_root_/runtime/generator/helper/remove_space_and_comment" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
+fi
 "$_dot_bootstrap_root_/runtime/generator/helper/lazyWrapperGenerator" "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/lazy_funcs" >> "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main"
