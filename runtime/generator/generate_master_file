@@ -7,7 +7,9 @@ while read -r module ; do
     echo "[generator/generate_master_file] skipping merge for $index" | debug
     echo "source \"$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main\"" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
   else
+    echo "(){" >> "$_dot_bootstrap_root_/generated/$_session_id_/master" 
     cat "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
+    echo "}" >> "$_dot_bootstrap_root_/generated/$_session_id_/master" 
   fi
 done < "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted_dependency_sorted"
 state="${state}generate_master_file "
