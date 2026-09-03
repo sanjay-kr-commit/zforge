@@ -1,0 +1,42 @@
+#!/bin/env zsh
+# @p -> -1000000
+
+[[ -z "$( findmnt "$_dot_bootstrap_root_/config/private" )" ]] || {
+  echo "[gocryptfs] already mounted" | debug
+  return
+}
+
+[[ -d "$_dot_bootstrap_root_/config/private" ]] || mkdir -p "$_dot_bootstrap_root_/config/private"
+
+[[ -d "$_dot_bootstrap_root_/config/public/gocryptfs" ]] || mkdir -p "$_dot_bootstrap_root_/config/public/gocryptfs"
+
+[[ -f "$_dot_bootstrap_root_/config/private/gocryptfs.pass" && -z "$( cat "$_dot_bootstrap_root_/config/private/gocryptfs.pass" )" ]] && rm "$_dot_bootstrap_root_/config/private/gocryptfs.pass"
+
+[[ -f "$_dot_bootstrap_root_/config/private/gocryptfs.pass" ]] || {
+
+  if [[ -f "$_dot_bootstrap_root_/config/public/gocryptfs/gocryptfs.conf" ]] ; then 
+    mkdir -p "/dev/shm/gocryptfs-testing"
+    # fake exit code
+    while (( 1 )); do
+      systemd-ask-password "password for secure mount" > "$_dot_bootstrap_root_/config/private/gocryptfs.pass"
+      (( "$?" == 0 )) || {
+        echo "[gocryptfs] aborting"
+        return
+      }
+      gocryptfs -nonempty -passfile "$_dot_bootstrap_root_/config/private/gocryptfs.pass" "$_dot_bootstrap_root_/config/public/gocryptfs" "/dev/shm/gocryptfs-testing" 2>&1 >/dev/null
+      (( "$?" == 0 )) && break
+    done
+    umount "/dev/shm/gocryptfs-testing"
+    rmdir "/dev/shm/gocryptfs-testing"
+  else
+    systemd-ask-password "password for secure mount" > "$_dot_bootstrap_root_/config/private/gocryptfs.pass"
+  fi
+
+}
+
+[[ -f "$_dot_bootstrap_root_/config/public/gocryptfs/gocryptfs.conf" ]] || {
+  gocryptfs -init -passfile "$_dot_bootstrap_root_/config/private/gocryptfs.pass" "$_dot_bootstrap_root_/config/public/gocryptfs" 2>&1 >"$_dot_bootstrap_root_/config/private/gocryptfs.masterkey"
+}
+
+gocryptfs -nonempty -passfile "$_dot_bootstrap_root_/config/private/gocryptfs.pass" "$_dot_bootstrap_root_/config/public/gocryptfs" "$_dot_bootstrap_root_/config/private" 2>&1 >/dev/null
+echo "[gocryptfs] mount $(findmnt "$_dot_bootstrap_root_/config/private" )" | debug
