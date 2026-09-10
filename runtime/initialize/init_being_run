@@ -1,0 +1,19 @@
+#!/bin/env zsh
+
+(( "$#" == 0 )) && {
+  echo "Here's What you can do"
+  echo "--generate : generate new snapshot in foreground"
+  echo "--chmodx   : make everything executable"
+  exit
+}
+
+[[ "$*" == *"--chmodx"* ]] && {
+  echo "-> made everything executable"
+  chmod -R +x "$_dot_bootstrap_root_/runtime/"
+}
+
+[[ "$*" == *"--generate"* ]] && {
+  echo "-> generating new snapshot"
+  export _ZFORGE_FORCE_FOREGROUND_GENERATION=1
+  source "$_dot_bootstrap_root_/runtime/orchestrator/main"
+}

@@ -9,6 +9,14 @@ source "$_dot_bootstrap_root_/runtime/initialize/init_logger"
 echo "root dir : $_dot_bootstrap_root_" | debug
 echo "session id : $_session_id_" | debug
 
+# running as script
+[[ "$ZSH_EVAL_CONTEXT" == "toplevel" ]] && {
+  source "$_dot_bootstrap_root_/runtime/initialize/init_being_run" "$@"
+  exit
+}
+
+builtin alias zforge="$_dot_bootstrap_root_/runtime/init"
+
 source "$_dot_bootstrap_root_/runtime/orchestrator/main"
 
 source "$_dot_bootstrap_root_/runtime/loaders/load_shell_api"
