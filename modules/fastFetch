@@ -1,3 +1,10 @@
 #!/bin/zsh
 # @p->1001
+# $HOME/.config/fastfetch/config.jsonc
+[[ -d "$HOME/.config/fastfetch" ]] || mkdir -p "$HOME/.config/fastfetch"
+[[ ! -f "$HOME/.config/fastfetch/config.jsonc" ]] && [[ -f "$_dot_bootstrap_root_/config/static_config/public/fastfetch/config.jsonc" ]] && cp "$_dot_bootstrap_root_/config/static_config/public/fastfetch/config.jsonc" "$HOME/.config/fastfetch/config.jsonc"
 pokemon-colorscripts-go --no-title | fastfetch --file -
+:fastfetch-backup-config() {
+  [[ -d "$_dot_bootstrap_root_/config/static_config/public/fastfetch" ]] || mkdir -p "$_dot_bootstrap_root_/config/static_config/public/fastfetch"
+  cp "$HOME/.config/fastfetch/config.jsonc" "$_dot_bootstrap_root_/config/static_config/public/fastfetch/config.jsonc" 
+}

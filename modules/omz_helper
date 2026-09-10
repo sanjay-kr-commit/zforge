@@ -4,8 +4,8 @@ if [[ ! -d $_dot_bootstrap_root_/config/public/omz_helper ]] ; then
   mkdir -p $_dot_bootstrap_root_/config/public/omz_helper 
 fi
 if [[ ! -f $_dot_bootstrap_root_/config/public/omz_helper/plugins ]] ; then 
-  if [[ -f  $_dot_bootstrap_root_/static_config/public/omz_helper/plugins ]] ; then 
-    cp  $_dot_bootstrap_root_/static_config/public/omz_helper/plugins $_dot_bootstrap_root_/config/public/omz_helper/plugins
+  if [[ -f  $_dot_bootstrap_root_/config/static_config/public/omz_helper/plugins ]] ; then 
+    cp  $_dot_bootstrap_root_/config/static_config/public/omz_helper/plugins $_dot_bootstrap_root_/config/public/omz_helper/plugins
     source $_dot_bootstrap_root_/module/omz
   else 
     echo "plugins=(" >> $_dot_bootstrap_root_/config/public/omz_helper/plugins 
@@ -97,14 +97,14 @@ _enable_omz_plugins() {
 }
 
 :omz-take-snapshot() {
-  if [[ ! -d $_dot_bootstrap_root_/static_config/public/omz_helper ]] ; then 
-    mkdir -p $_dot_bootstrap_root_/static_config/public/omz_helper
+  if [[ ! -d $_dot_bootstrap_root_/config/static_config/public/omz_helper ]] ; then 
+    mkdir -p $_dot_bootstrap_root_/config/static_config/public/omz_helper
   fi
-  cp $_dot_bootstrap_root_/config/public/omz_helper/plugins $_dot_bootstrap_root_/static_config/public/omz_helper/plugins
+  cp $_dot_bootstrap_root_/config/public/omz_helper/plugins $_dot_bootstrap_root_/config/static_config/public/omz_helper/plugins
 }
 
 :omz-take-snapshot() {
-  if [[ -f $_dot_bootstrap_root_/static_config/public/omz_helper/plugins ]] ; then 
-    rm $_dot_bootstrap_root_/static_config/public/omz_helper/plugins 
+  if [[ -f $_dot_bootstrap_root_/config/static_config/public/omz_helper/plugins ]] ; then 
+    rm $_dot_bootstrap_root_/config/static_config/public/omz_helper/plugins 
   fi
 }

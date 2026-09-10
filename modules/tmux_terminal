@@ -2,7 +2,7 @@
 # @p -> -100
 
 if [[ ! -f $HOME/.tmux.conf ]]; then
-  cp $_dot_bootstrap_root_/static_config/public/tmux_terminal/tmux.conf $HOME/.tmux.conf
+  cp $_dot_bootstrap_root_/config/static_config/public/tmux_terminal/tmux.conf $HOME/.tmux.conf
 fi
 
 notifySessionStatusAndExitTmux() {
