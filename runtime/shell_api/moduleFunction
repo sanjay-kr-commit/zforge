@@ -66,5 +66,12 @@ _dot_module_disable() {
       _dot_module_disable "$(echo $output | awk '{ print $2 }')"
     fi
   done
+  if [[ "$*" == *"--silent"* ]] ; then
+    zforge --generate --silent
+  elif [[ "$*" == *"--page"* ]]; then
+    zforge --generate | less
+  else
+    zforge --generate
+  fi
   unset DISABLE_DOT_LIST_PAGER
 }

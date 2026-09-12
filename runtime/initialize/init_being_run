@@ -3,6 +3,7 @@
 (( "$#" == 0 )) && {
   echo "Here's What you can do"
   echo "--generate : generate new snapshot in foreground"
+  echo "--generate --silent : generate new snapshot in silence"
   echo "--chmodx   : make everything executable"
   exit
 }
@@ -15,5 +16,10 @@
 [[ "$*" == *"--generate"* ]] && {
   echo "-> generating new snapshot"
   export _ZFORGE_FORCE_FOREGROUND_GENERATION=1
-  source "$_dot_bootstrap_root_/runtime/orchestrator/main"
+  if [[ -z "$( grep -- "--generate \+--silent" <<< "$*" )" ]] ; then 
+    source "$_dot_bootstrap_root_/runtime/orchestrator/main"
+  else
+    source "$_dot_bootstrap_root_/runtime/orchestrator/main" 2>&1 >/dev/null
+  fi
+  echo "-> generation task complete"
 }
