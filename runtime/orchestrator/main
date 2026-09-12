@@ -16,7 +16,11 @@ else
     local _main_SILENT_LOG_status=$SILENT_LOG
     unset SILENT_LOG
   }
-  echo "[orchestrator/main] generated doesn't exists : generating cache" | error
+  if [[ -v _ZFORGE_FORCE_FOREGROUND_GENERATION ]] ; then
+    echo "[orchestrator/main] generating new snapshot" | debug
+  else
+    echo "[orchestrator/main] generated doesn't exists : generating cache" | error
+  fi
   source "$_dot_bootstrap_root_/runtime/orchestrator/init" 
   [[ -v _main_SILENT_LOG_status ]] && export SILENT_LOG=$_main_SILENT_LOG_status
   [[ -v _main_LOGALL_status ]] && unset LOGALL
