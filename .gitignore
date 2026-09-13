@@ -1,4 +1,6 @@
 config/private
 config/private/*
+config/static_config/private
+config/static_config/private/*
 generated
 generated/*
