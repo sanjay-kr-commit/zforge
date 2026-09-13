@@ -27,6 +27,10 @@ git() {
     return
   fi
   local actualGit="/usr/bin/git"
+  if [[ "$@" == *"clone"* ]] ; then 
+    $actualGit $*
+    return
+  fi
   export user_name="$( $actualGit remote get-url origin | \
     sed -e 's#https://##g' | \
     sed -e 's#^[^/]*/##g' | \
