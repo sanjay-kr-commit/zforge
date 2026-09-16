@@ -1,0 +1,161 @@
+#!/bin/env zsh
+# @f -> RAM_FOR_TEMP_DATA_TRACK_CONFIG
+
+[[ -d "$_dot_bootstrap_root_/config/public/track_config" ]] || mkdir -p "$_dot_bootstrap_root_/config/public/track_config"
+[[ -d "$_dot_bootstrap_root_/config/private/track_config" ]] || mkdir -p "$_dot_bootstrap_root_/config/private/track_config"
+
+_change_tracking_visibility() {
+  local temp="${$(mktemp)#/tmp/}"
+  if [[ -v RAM_FOR_TEMP_DATA_TRACK_CONFIG ]] ; then
+    local temp="$_dot_bootstrap_root_/config/public/track_config/track_list$temp"
+  else
+    local temp="/dev/shm/$temp"
+  fi
+  local entry="$( grep -F "$1:" "$_dot_bootstrap_root_/config/public/track_config/track_list" )"
+  local visibility="${entry%%:*}"
+  echo "[track-config] '$entry'" | debug
+  echo "[track-config] visibility '$visibility'" | debug
+  awk -v pattern="$entry" ' $0 != pattern { print $0} ' "$_dot_bootstrap_root_/config/public/track_config/track_list" > "$temp"
+  if [[ "$visibility" == "public" ]] ; then 
+    local new_visibility="private"
+  else
+    local new_visibility="public"
+  fi
+  sed -e "s/^$visibility:/$new_visibility:/g" <<< "$entry" >> "$temp"
+  echo "[track-config] updated to $visibility -> $new_visibility" | debug
+  mv "$temp" "$_dot_bootstrap_root_/config/public/track_config/track_list"
+}
+
+_list_of_changed_tracked_entries() {
+  while IFS= read -r entry; do
+    local visibility="$( cut -d ':' -f1 <<< "$entry" )"
+    local source_path="$(eval "echo $( cut -d ':' -f2 <<< "$entry" )")"
+    local destination_hash="$( cut -d ':' -f3 <<< "$entry" )"
+    local destination_path="$_dot_bootstrap_root_/config/$visibility/track_config/$destination_hash"
+    [[ -e "$destination_path" ]] || {
+      echo "$entry"
+      continue
+    }
+    [[ -e "$source_path" ]] || {
+      echo "$entry"
+      continue
+    }
+    diff -qr "$source_path" "$destination_path" >/dev/null
+    local exit_code="$?"
+    case "$exit_code" in
+      0) echo "[track-config] no changes for entry : $entry" | debug ;;
+      1) echo "$entry" ;;
+      *) echo "[track-config] something went wrong : '$exit_code'" | error ;;
+    esac
+  done < "$_dot_bootstrap_root_/config/public/track_config/track_list"
+}
+
+:track-pull() {
+  while [[ true ]]; do
+    local selected="$( _list_of_changed_tracked_entries | fzf --preview-window=wrap --preview "local visibility=\"\$( cut -d ':' -f1 <<< {} )\" && local source_path=\"\$( eval \"echo \$( cut -d ':' -f2 <<< {} )\" )\" && local destination_hash=\"\$( cut -d ':' -f3 <<< {} )\" && local destination_path=\"$_dot_bootstrap_root_/config/\$visibility/track-config/\$destination_hash\" && echo \"\$visibility\" && echo \"\$source_path\" && echo \"\$destination_hash\" && echo \"\$destination_path\" && diff -ruN \"\$source_path\" \"\$destination_path\" | bat --decorations=never --language=zsh --wrap=auto --color=always" )"
+    [[ -z "$selected" ]] && break
+    local visibility="$( cut -d ':' -f1 <<< "$selected" )"
+    local source_path="$(eval "echo $( cut -d ':' -f2 <<< "$selected" )")"
+    local destination_hash="$( cut -d ':' -f3 <<< "$selected" )"
+    local destination_path="$_dot_bootstrap_root_/config/$visibility/track_config/$destination_hash"
+    [[ -f "$destination_path" ]] && {
+      cp "$destination_path" "$source_path"
+      continue
+    }
+    [[ ! -d "$source_path" ]] && [[ -d "$destination_path" ]] && mkdir -p "$source_path"
+    cp -r "$destination_path/"*(D) "$source_path/"
+  done
+}
+
+:track-push() {
+  while [[ true ]]; do
+    local selected="$( _list_of_changed_tracked_entries | fzf --preview-window=wrap --preview "local visibility=\"\$( cut -d ':' -f1 <<< {} )\" && local source_path=\"\$( eval \"echo \$( cut -d ':' -f2 <<< {} )\" )\" && local destination_hash=\"\$( cut -d ':' -f3 <<< {} )\" && local destination_path=\"$_dot_bootstrap_root_/config/\$visibility/track-config/\$destination_hash\" && echo \"\$visibility\" && echo \"\$source_path\" && echo \"\$destination_hash\" && echo \"\$destination_path\" && diff -ruN \"\$source_path\" \"\$destination_path\" | bat --decorations=never --language=zsh --wrap=auto --color=always" )"
+    [[ -z "$selected" ]] && break
+    local visibility="$( cut -d ':' -f1 <<< "$selected" )"
+    local source_path="$(eval "echo $( cut -d ':' -f2 <<< "$selected" )")"
+    local destination_hash="$( cut -d ':' -f3 <<< "$selected" )"
+    local destination_path="$_dot_bootstrap_root_/config/$visibility/track_config/$destination_hash"
+    [[ -f "$source_path" ]] && {
+      cp "$source_path" "$destination_path"
+      continue
+    }
+    [[ -d "$source_path" ]] && [[ ! -d "$destination_path" ]] && mkdir -p "$destination_path"
+    cp -r "$source_path/"*(D) "$destination_path/"
+  done
+}
+
+# first flag is -p then it is private
+:track() {
+  (( "$#" > 0 )) && [[ "$1" == "-p" ]] && {
+    local is_private="1"
+    shift
+  }
+  (( "$#" == 0 )) && {
+    echo "provide atleats one file or folder name"
+    echo "use -p to keep the visibility private"
+    echo "-p should be first flag : ex ':track -p file folder'"
+    return
+  }
+  for file in "$@" ; do
+    local ap="${file:A}"
+    local config_portable_path="${ap/#"$HOME"/"\$HOME"}"
+    [[ ! -e "$file" ]] && {
+      echo "[track-config] $config_portable_path : Nether a file nor a directory" >&2 | debug
+      continue
+    }
+    [[ -f "$_dot_bootstrap_root_/config/public/track_config/track_list" ]] && {
+      echo "[track-config] track_list exists" | debug
+      local entry="$(grep -o ".\+:$config_portable_path:" "$_dot_bootstrap_root_/config/public/track_config/track_list")"
+      echo "[track-config] entry : '$entry'" | debug
+      [[ -z "$entry" ]] || {
+        local visibility="${entry%%:*}"
+        echo "[track-config] visibility '$visibility'" | debug
+        [[ -v is_private && "$visibility" == "public" ]] || [[ ! -v is_private && "$visibility" == "private" ]] && _change_tracking_visibility "$config_portable_path"
+        continue
+      }
+    }
+    if [[ -v is_private ]] ;then
+      printf "private" >> "$_dot_bootstrap_root_/config/public/track_config/track_list"
+    else
+      printf "public" >> "$_dot_bootstrap_root_/config/public/track_config/track_list"
+    fi
+    printf ":%s" "$config_portable_path" >> "$_dot_bootstrap_root_/config/public/track_config/track_list"
+    printf ":%s\n" "$(uuidgen)" >> "$_dot_bootstrap_root_/config/public/track_config/track_list"
+  done
+  unset is_private ap
+}
+
+:track-list() {
+  [[ -f "$_dot_bootstrap_root_/config/public/track_config/track_list" ]] || {
+    echo "Track list is empty"
+    return
+  }
+  cat "$_dot_bootstrap_root_/config/public/track_config/track_list"
+}
+
+:track-remove() {
+  [[ -f "$_dot_bootstrap_root_/config/public/track_config/track_list" ]] || {
+    echo "Track list is empty"
+    return
+  }
+  local temp="${$(mktemp)#/tmp/}"
+  if [[ -v RAM_FOR_TEMP_DATA_TRACK_CONFIG ]] ; then
+    local temp="$_dot_bootstrap_root_/config/public/track_config/track_list$temp"
+  else
+    local temp="/dev/shm/$temp"
+  fi
+  while [[ true ]]; do
+    local selected="$(cat "$_dot_bootstrap_root_/config/public/track_config/track_list" | fzf )"
+    [[ -z "$selected" ]] && break
+        local visibility="$( cut -d ':' -f1 <<< "$selected" )"
+    local source_path="$(eval "echo $( cut -d ':' -f2 <<< "$selected" )")"
+    local destination_hash="$( cut -d ':' -f3 <<< "$selected" )"
+    local destination_path="$_dot_bootstrap_root_/config/$visibility/track_config/$destination_hash"
+    [[ -e "$destination_path" ]] && {
+      chmod -R 777 "$destination_path"
+      rm -r "$destination_path"
+    }
+    awk -v pattern="$selected" ' $0 != pattern { print $0} ' "$_dot_bootstrap_root_/config/public/track_config/track_list" > "$temp"
+    mv "$temp" "$_dot_bootstrap_root_/config/public/track_config/track_list"
+  done
+}
