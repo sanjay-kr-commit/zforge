@@ -11,3 +11,5 @@ loadBins
 tmux_terminal
 activateVenv
 gocryptfs
+omz_helper
+track_config

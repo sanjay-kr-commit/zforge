@@ -52,3 +52,4 @@ builtin alias liveserverstart=nvim\ --headless\ +\"LiveServerStart\"
 builtin alias prettify=nvim\ --headless\ +\"lua\ require\(\"conform\"\).format\(\)\"\ +wq
 builtin alias :ls=liveserverstart
 builtin alias :vt=\(\)\{\ tempfile=\"\$\(mktemp\ -p\ /dev/shm\)\"\ \&\&\ if\ \[\[\ -p\ /dev/stdin\ \]\]\;\ then\ cat\ \>\ \"\$tempfile\"\ \;\ else\ touch\ \"\$tempfile\"\;\ fi\ \&\&\ nvim\ \"\$@\"\ \"\$tempfile\"\ 2\>/dev/null\ \&\&\ cat\ \"\$tempfile\"\;\ rm\ -f\ \"\$tempfile\"\;\ unset\ tempfile\ \}
+builtin alias rmf=\(\)\{\ chmod\ -R\ 777\ \"\$\*\"\ \&\&\ rm\ -r\ \"\$\*\"\ \}
