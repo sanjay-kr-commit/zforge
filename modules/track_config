@@ -5,11 +5,12 @@
 [[ -d "$_dot_bootstrap_root_/config/private/track_config" ]] || mkdir -p "$_dot_bootstrap_root_/config/private/track_config"
 
 _change_tracking_visibility() {
-  local temp="${$(mktemp)#/tmp/}"
+  #local temp="${$(mktemp)#/tmp/}"
+  local temp="$(uuidgen)"
   if [[ -v RAM_FOR_TEMP_DATA_TRACK_CONFIG ]] ; then
-    local temp="$_dot_bootstrap_root_/config/public/track_config/track_list$temp"
-  else
     local temp="/dev/shm/$temp"
+  else
+    local temp="$_dot_bootstrap_root_/config/public/track_config/track_list$temp"
   fi
   local entry="$( grep -F "$1:" "$_dot_bootstrap_root_/config/public/track_config/track_list" )"
   local visibility="${entry%%:*}"
@@ -51,6 +52,10 @@ _list_of_changed_tracked_entries() {
 }
 
 :track-pull() {
+  [[ -z "$( _list_of_changed_tracked_entries )" ]] && {
+    echo "Nothing to pull"
+    return
+  }
   while [[ true ]]; do
     local selected="$( _list_of_changed_tracked_entries | fzf --preview-window=wrap --preview "local visibility=\"\$( cut -d ':' -f1 <<< {} )\" && local source_path=\"\$( eval \"echo \$( cut -d ':' -f2 <<< {} )\" )\" && local destination_hash=\"\$( cut -d ':' -f3 <<< {} )\" && local destination_path=\"$_dot_bootstrap_root_/config/\$visibility/track-config/\$destination_hash\" && echo \"\$visibility\" && echo \"\$source_path\" && echo \"\$destination_hash\" && echo \"\$destination_path\" && diff -ruN \"\$source_path\" \"\$destination_path\" | bat --decorations=never --language=zsh --wrap=auto --color=always" )"
     [[ -z "$selected" ]] && break
@@ -68,6 +73,10 @@ _list_of_changed_tracked_entries() {
 }
 
 :track-push() {
+  [[ -z "$( _list_of_changed_tracked_entries )" ]] && {
+    echo "Nothing to push"
+    return
+  }
   while [[ true ]]; do
     local selected="$( _list_of_changed_tracked_entries | fzf --preview-window=wrap --preview "local visibility=\"\$( cut -d ':' -f1 <<< {} )\" && local source_path=\"\$( eval \"echo \$( cut -d ':' -f2 <<< {} )\" )\" && local destination_hash=\"\$( cut -d ':' -f3 <<< {} )\" && local destination_path=\"$_dot_bootstrap_root_/config/\$visibility/track-config/\$destination_hash\" && echo \"\$visibility\" && echo \"\$source_path\" && echo \"\$destination_hash\" && echo \"\$destination_path\" && diff -ruN \"\$source_path\" \"\$destination_path\" | bat --decorations=never --language=zsh --wrap=auto --color=always" )"
     [[ -z "$selected" ]] && break
@@ -138,11 +147,12 @@ _list_of_changed_tracked_entries() {
     echo "Track list is empty"
     return
   }
-  local temp="${$(mktemp)#/tmp/}"
+  #local temp="${$(mktemp)#/tmp/}"
+  local temp="$(uuidgen)"
   if [[ -v RAM_FOR_TEMP_DATA_TRACK_CONFIG ]] ; then
-    local temp="$_dot_bootstrap_root_/config/public/track_config/track_list$temp"
-  else
     local temp="/dev/shm/$temp"
+  else
+    local temp="$_dot_bootstrap_root_/config/public/track_config/track_list$temp"
   fi
   while [[ true ]]; do
     local selected="$(cat "$_dot_bootstrap_root_/config/public/track_config/track_list" | fzf )"
