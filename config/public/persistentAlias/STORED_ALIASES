@@ -1,15 +1,9 @@
-builtin alias removeAndroidStudioLock='rm .var/app/com.google.AndroidStudio/config/Google/AndroidStudio2024.1/.lock'
 builtin alias xclip='xclip -selection c'
 builtin alias :q='exit'
 builtin alias tmux='/usr/bin/tmux -u'
 builtin alias :s='poweroff'
 builtin alias :r='reboot'
-builtin alias dotpush='currentDir=$(pwd) && cd $HOME/dotfiles && push && cd $currentDir && unset currentDir'
 builtin alias gitRemove='git rm --cached'
-builtin alias c+='zig c++'
-builtin alias updateList='apt list --upgradable| less'
-builtin alias ratemirror='rate-mirrors arch | sudo tee /etc/pacman.d/mirrorlist && rate-mirrors endeavouros | sudo tee /etc/pacman.d/endeavouros-mirrorlist'
-builtin alias ratemirrorandupdate='rate-mirrors arch | sudo tee /etc/pacman.d/mirrorlist && rate-mirrors endeavouros | sudo tee /etc/pacman.d/endeavouros-mirrorlist && eos-update --aur'
 builtin alias :i='nvim .'
 builtin alias removeOrphanPackages='sudo pacman -Rns $(pacman -Qdtq)'
 builtin alias removePackageCache='paccache -r && paccache -ruk0'
@@ -18,13 +12,11 @@ builtin alias :si='sudo nvim .'
 builtin alias pull='git pull'
 builtin alias :c='clear'
 builtin alias :p='git pull'
-builtin alias c='zig cc -Wmain-return-type'
 builtin alias pythonPackageRebuild='yay -S $(yay -Qoq /usr/lib/"$(readlink /usr/bin/"$(readlink /usr/bin/python)" )") --answerclean All --noconfirm'
 builtin alias packageSearch='yay -F'
 builtin alias updatePackageContentDatabase='yay -Fy'
 builtin alias qdbusviewer='/usr/lib/qt6/bin/qdbusviewer'
 builtin alias kill-session='tmux kill-session -t'
-builtin alias signer='/home/sanjay/build-tools/35.0.1/apksigner'
 builtin alias toggleNightColor='/usr/bin/qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut "Toggle Night Color"'
 builtin alias open='xdg-open'
 builtin alias btop='btop --force-utf'
@@ -32,7 +24,6 @@ builtin alias :l='nvim leetcode.nvim'
 builtin alias :v='nvim'
 builtin alias :sv='sudoedit'
 builtin alias downmp3='yt-dlp --audio-format mp3 -x'
-builtin alias aiLab='if [[ "$(pwd)" != "$HOME/college/ai" ]] ; then ; cd ~/college/ai ; fi && if [[ "$(which deactivate)" == "deactivate not found" ]] ; then ; activateVenv; fi && python $(which idle) $(date +%Y-%m-%d).py && deactivate'
 builtin alias lastCommand=" tail -n1 ~/.zsh_history | grep -o \";.*\" | sed -e 's/;//g'"
 builtin alias update-initramfs='sudo dracut --force --hostonly --no-hostonly-cmdline /boot/initramfs-linux.img $(uname -r)'
 builtin alias today='nvim ~/Documents/Obsidian/Daily\ Logs/$(date +%Y-%m-%d).md'
@@ -51,5 +42,4 @@ builtin alias prettifyPWD=find\ \$\(pwd\)\ -type\ f\ \|\ while\ IFS=\ read\ -r\ 
 builtin alias liveserverstart=nvim\ --headless\ +\"LiveServerStart\"
 builtin alias prettify=nvim\ --headless\ +\"lua\ require\(\"conform\"\).format\(\)\"\ +wq
 builtin alias :ls=liveserverstart
-builtin alias :vt=\(\)\{\ tempfile=\"\$\(mktemp\ -p\ /dev/shm\)\"\ \&\&\ if\ \[\[\ -p\ /dev/stdin\ \]\]\;\ then\ cat\ \>\ \"\$tempfile\"\ \;\ else\ touch\ \"\$tempfile\"\;\ fi\ \&\&\ nvim\ \"\$@\"\ \"\$tempfile\"\ 2\>/dev/null\ \&\&\ cat\ \"\$tempfile\"\;\ rm\ -f\ \"\$tempfile\"\;\ unset\ tempfile\ \}
 builtin alias rmf=\(\)\{\ chmod\ -R\ 777\ \"\$\*\"\ \&\&\ rm\ -r\ \"\$\*\"\ \}
