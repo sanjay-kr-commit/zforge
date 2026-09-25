@@ -41,6 +41,14 @@ dependencies="$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_depende
   echo "$dependencies" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/dependencies"
 }
 
+env="$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_env" "$_dot_bootstrap_root_/modules/$name" )"
+
+[[ -z "$env" ]] || {
+  echo "[generator/module] env found for $name : $(echo $env | tr '\n' ' ' )" | debug
+  [[ -f "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/env" ]] && rm "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/env"
+  echo "$env" > "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/env"
+}
+
 [[ -z "$( "$_dot_bootstrap_root_/runtime/generator/helper/extract_nomerge" "$_dot_bootstrap_root_/modules/$name" )" ]] || {
   echo "[generator/module] module '$name' : this module shouldn't be merged" | debug
   touch "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/nomerge"
