@@ -1,0 +1,87 @@
+#!/bin/env zsh
+
+# @f->ALLOW_EXPLICIT_ASCII
+# @e->ASCII_SEARCH_QUERY
+# @d->env_flags
+# @nolazy
+
+[[ -v "ASCII_SEARCH_QUERY" ]] || {
+  echo "ASCII_SEARCH_QUERY Not found"
+  echo "export ASCII_SEARCH_QUERY=\".*\""
+  return
+}
+
+[[ "$ASCII_SEARCH_QUERY" != *[!$' \t\r\n']* ]] && {
+  echo "ASCII_SEARCH_QUERY is blank"
+  echo "export ASCII_SEARCH_QUERY=\".*\""
+  return
+}
+
+_get_encoded_url() {
+  url="https://emojicombos.com/api/search?keyphrase=$encoded"
+  wget "$url" -qO - | sed -e 's#https://emojicombos.com/##g'
+}
+
+rp=${rp/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}
+_download_ascii_art() {
+  
+  encoded="$(_get_encoded_url)"
+  url="https://emojicombos.com/$encoded"
+  html="$_dot_bootstrap_root_/generated/ascii_art_fastfetch/$encoded.html"
+ 
+  echo "search     : https://emojicombos.com/api/search?keyphrase=$encoded"
+  echo "encoded    : ${encoded/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "url        : $url"
+  echo "html       : ${html/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "output     : ${output/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "explicit   : $( if [[ -v "ALLOW_EXPLICIT_ASCII" ]] ; then echo true ; else echo false ; fi )"
+
+  [[ -d "$output" ]] || mkdir -p "$output"
+  [[ -f "$html" ]] || wget "$url" -O "$html"
+  [[ -f "$html.trimmed" ]] || sed -e 's#^[[:space:]]\+\(<[[:space:]]*div\)#\1#g' "$html" > "$html.trimmed"
+  
+  elements=$(htmlq '.emoji-wrap' < "$html.trimmed" )
+  
+  count=$(grep -Po '(?<=class=)"[^"]*emoji-wrap[^"]*"' "$html" | wc -l)
+  
+  
+  saved=0
+  
+  for ((i = 0; i < count; i++)); do
+ 
+    adult_art_encoded_data=$( print -r -- "$elements" | htmlq -a data-encoded-text ".emoji-wrap:nth-child($((i + 1))) .emojis")
+
+    #echo "adult_art_encoded_data :$adult_art_encoded_data"
+    #print -r -- "$adult_art_encoded_data" | base64 -d 
+    #echo
+
+    # Skip sensitive/explicit entries unless ALLOW_EXPLICIT_ASCII is set.
+    [[ ! -v "ALLOW_EXPLICIT_ASCII" ]] && [[ ! -z "$adult_art_encoded_data" ]] && {
+        print -n "\r$((i + 1))/$count"
+        continue
+    }
+
+    if [[ -z "$adult_art_encoded_data" ]] ; then
+      normal_art=$( print -r -- "$elements" | htmlq -t ".emoji-wrap:nth-child($((i + 1))) ")
+      print -r -- "$normal_art" > "$output/$saved.ascii"
+      output_art_file="$output/$saved.ascii"
+    else 
+      print -r -- "$adult_art_encoded_data" | base64 -d > "$output/${saved}_adult.ascii"
+      output_art_file="$output/${saved}_adult.ascii"
+    fi
+  
+    ((saved++))
+  
+    print -n "\r$((i + 1))/$count"
+  done
+  
+  print
+  print "Saved $saved/$count"
+}
+
+encoded=$(jq -rn --arg v "$ASCII_SEARCH_QUERY" '$v|@uri')
+output="$_dot_bootstrap_root_/generated/ascii_art_fastfetch/$encoded"
+[[ -v "ALLOW_EXPLICIT_ASCII" ]] && output="${output}_explicit"
+
+[[ -d "$output" ]] || _download_ascii_art
+ls "$output" | shuf -n 1 | tr '\n' '\0' | xargs -0 sh -c "cat \"$output/\$1\"" _ | fastfetch --file - 
