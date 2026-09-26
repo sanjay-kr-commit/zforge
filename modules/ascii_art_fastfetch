@@ -2,6 +2,8 @@
 
 # @f->ALLOW_EXPLICIT_ASCII
 # @e->ASCII_SEARCH_QUERY
+# @e->ASCII_DIMENSION_HEIGHT
+# @e->ASCII_DIMENSION_WIDTH
 # @d->env_flags
 # @nolazy
 
@@ -35,8 +37,7 @@ _download_ascii_art() {
   echo "html       : ${html/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
   echo "output     : ${output/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
   echo "explicit   : $( if [[ -v "ALLOW_EXPLICIT_ASCII" ]] ; then echo true ; else echo false ; fi )"
-
-  [[ -d "$output" ]] || mkdir -p "$output"
+  [[ -d "$output.temp" ]] || mkdir -p "$output.temp"
   [[ -f "$html" ]] || wget "$url" -O "$html"
   [[ -f "$html.trimmed" ]] || sed -e 's#^[[:space:]]\+\(<[[:space:]]*div\)#\1#g' "$html" > "$html.trimmed"
   
@@ -44,39 +45,36 @@ _download_ascii_art() {
   
   count=$(grep -Po '(?<=class=)"[^"]*emoji-wrap[^"]*"' "$html" | wc -l)
   
-  
   saved=0
   
   for ((i = 0; i < count; i++)); do
  
     adult_art_encoded_data=$( print -r -- "$elements" | htmlq -a data-encoded-text ".emoji-wrap:nth-child($((i + 1))) .emojis")
 
-    #echo "adult_art_encoded_data :$adult_art_encoded_data"
-    #print -r -- "$adult_art_encoded_data" | base64 -d 
-    #echo
-
     # Skip sensitive/explicit entries unless ALLOW_EXPLICIT_ASCII is set.
     [[ ! -v "ALLOW_EXPLICIT_ASCII" ]] && [[ ! -z "$adult_art_encoded_data" ]] && {
-        print -n "\r$((i + 1))/$count"
+        print -n "\r-> extracting $((i + 1))/$count"
         continue
     }
 
     if [[ -z "$adult_art_encoded_data" ]] ; then
       normal_art=$( print -r -- "$elements" | htmlq -t ".emoji-wrap:nth-child($((i + 1))) ")
-      print -r -- "$normal_art" > "$output/$saved.ascii"
-      output_art_file="$output/$saved.ascii"
+      print -r -- "$normal_art" > "$output.temp/$saved.ascii"
+      output_art_file="$output.temp/$saved.ascii"
     else 
-      print -r -- "$adult_art_encoded_data" | base64 -d > "$output/${saved}_adult.ascii"
-      output_art_file="$output/${saved}_adult.ascii"
+      print -r -- "$adult_art_encoded_data" | base64 -d > "$output.temp/${saved}_explicit.ascii"
+      output_art_file="$output.temp/${saved}_explicit.ascii"
     fi
   
     ((saved++))
   
-    print -n "\r$((i + 1))/$count"
+    print -n "\r-> extracting $((i + 1))/$count"
   done
   
+  mv "$output.temp" "$output"
+
   print
-  print "Saved $saved/$count"
+  print "-> extracted $saved/$count   "
 }
 
 encoded=$(jq -rn --arg v "$ASCII_SEARCH_QUERY" '$v|@uri')
@@ -84,4 +82,28 @@ output="$_dot_bootstrap_root_/generated/ascii_art_fastfetch/$encoded"
 [[ -v "ALLOW_EXPLICIT_ASCII" ]] && output="${output}_explicit"
 
 [[ -d "$output" ]] || _download_ascii_art
-ls "$output" | shuf -n 1 | tr '\n' '\0' | xargs -0 sh -c "cat \"$output/\$1\"" _ | fastfetch --file - 
+
+_dimension_filter() {
+  find "$output" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" <= ASCII_DIMENSION_HEIGHT )) && (( "${dimension[1]}" <= ASCII_DIMENSION_WIDTH )) ; then echo "${dimension[2]}" ; fi' _
+}
+
+if [[ "$ASCII_DIMENSION_HEIGHT" == *[!$' \t\r\n']* ]] && [[ "$ASCII_DIMENSION_WIDTH" == *[!$' \t\r\n']* ]] ; then
+  local dimension_output="${output}_${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+  [[ -d "$dimension_output" ]] || {
+    echo "filtering  : ${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+    mkdir -p "$dimension_output.temp"
+    local saved=0
+    local total="$( ls "$output" | wc -l | cut -d ' ' -f1 )"
+    _dimension_filter | while IFS= read -r file; do 
+      file_name="${file##*/}"
+      print -n "\r-> copying $file_name           "
+      cp "$file" "$dimension_output.temp/$file_name"
+      ((saved++))
+    done
+    print "\nfiltered   : $saved/$total"
+    mv "$dimension_output.temp" "$dimension_output"
+  }
+  ls "$dimension_output" | shuf -n 1 | tr '\n' '\0' | xargs -0 sh -c "cat \"$output/\$1\"" _ | fastfetch --file - 
+else
+  ls "$output" | shuf -n 1 | tr '\n' '\0' | xargs -0 sh -c "cat \"$output/\$1\"" _ | fastfetch --file - 
+fi
