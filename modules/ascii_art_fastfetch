@@ -26,25 +26,28 @@ _get_encoded_url() {
 
 _download_ascii_art() {
   [[ -f "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/cached_query" ]] || touch "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/cached_query"
+  cached_query="$( grep -F "$escaped_search_query:" "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/cached_query" | tail -n1 )"
   if [[ -z "$cached_query" ]] ; then
+    echo "cached query : false"
     encoded="$(_get_encoded_url)"
     echo "$escaped_search_query:$encoded" >> "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/cached_query"
   else
+    echo "cached query : true"
     encoded="$( cut -d ':' -f2 <<< "$cached_query" )"
   fi
   url="https://emojicombos.com/$encoded"
   html="$_dot_bootstrap_root_/generated/ascii_art_fastfetch/$encoded.html"
-  echo "search     : https://emojicombos.com/api/search?keyphrase=$encoded"
-  echo "encoded    : ${encoded/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "search       : https://emojicombos.com/api/search?keyphrase=$encoded"
+  echo "encoded      : ${encoded/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
   [[ "$encoded" == "https://emojidb.org/"* ]] && {
     _ascii_art_fastfetch_error_="No webpage found for this query : \"$ASCII_SEARCH_QUERY\""
-    echo "$escaped_search_query" >> "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries"
+    echo "$escaped_search_query:" >> "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries"
     return
   }
-  echo "url        : $url"
-  echo "html       : ${html/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
-  echo "output     : ${output/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
-  echo "explicit   : $( if [[ -v "ALLOW_EXPLICIT_ASCII" ]] ; then echo true ; else echo false ; fi )"
+  echo "url          : $url"
+  echo "html         : ${html/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "output       : ${output/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "explicit     : $( if [[ -v "ALLOW_EXPLICIT_ASCII" ]] ; then echo true ; else echo false ; fi )"
   [[ -d "$output.temp" ]] || mkdir -p "$output.temp"
   [[ -f "$html" ]] || wget "$url" -O "$html"
   [[ -f "$html.trimmed" ]] || sed -e 's#^[[:space:]]\+\(<[[:space:]]*div\)#\1#g' "$html" > "$html.trimmed"
@@ -95,7 +98,7 @@ _ascii_art_refresh_() {
   output="$_dot_bootstrap_root_/generated/ascii_art_fastfetch/$escaped_search_query"
   [[ -v "ALLOW_EXPLICIT_ASCII" ]] && output="${output}_explicit"
   [[ -f "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" ]] || touch "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries"
-  grep -q "^$escaped_search_query$" "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" && {
+  grep -qF "$escaped_search_query:" "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" && {
     _ascii_art_fastfetch_error_="This query had no result : \"$ASCII_SEARCH_QUERY\""
     return
   }
@@ -111,11 +114,11 @@ _ascii_art_refresh_() {
       local total="$( ls "$output" | wc -l | cut -d ' ' -f1 )"
       _dimension_filter | while IFS= read -r file; do
         file_name="${file##*/}"
-        print -n "\r-> copying $file_name           "
+        print -n -- "\r-> copying $file_name           "
         cp "$file" "$dimension_output.temp/$file_name"
         ((saved++))
       done
-      print "\rfiltered   : $saved/$total            \n"
+      print -- "\rfiltered   : $saved/$total            \n"
       mv "$dimension_output.temp" "$dimension_output"
     }
     _ascii_art_dir_="$dimension_output"
