@@ -4,6 +4,8 @@
 # @e->ASCII_SEARCH_QUERY
 # @e->ASCII_DIMENSION_HEIGHT
 # @e->ASCII_DIMENSION_WIDTH
+# @e->ASCII_DIMENSION_HEIGHT_MIN
+# @e->ASCII_DIMENSION_WIDTH_MIN
 # @d->env_flags
 # @nolazy
 
@@ -87,10 +89,6 @@ _download_ascii_art() {
   print -- "\r-> extracted $saved/$count   \n"
 }
 
-_dimension_filter() {
-  find "$output" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" <= ASCII_DIMENSION_HEIGHT )) && (( "${dimension[1]}" <= ASCII_DIMENSION_WIDTH )) ; then echo "${dimension[2]}" ; fi' _
-}
-
 _ascii_art_refresh_() {
   [[ -d "$_dot_bootstrap_root_/generated/ascii_art_fastfetch" ]] || mkdir -p "$_dot_bootstrap_root_/generated/ascii_art_fastfetch"
   unset _ascii_art_fastfetch_error_
@@ -98,21 +96,25 @@ _ascii_art_refresh_() {
   output="$_dot_bootstrap_root_/generated/ascii_art_fastfetch/$escaped_search_query"
   [[ -v "ALLOW_EXPLICIT_ASCII" ]] && output="${output}_explicit"
   [[ -f "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" ]] || touch "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries"
+  
   grep -qF "$escaped_search_query:" "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" && {
     _ascii_art_fastfetch_error_="This query had no result : \"$ASCII_SEARCH_QUERY\""
     return
+  
   }
   [[ -d "$output" ]] || _download_ascii_art
   [[ -v _ascii_art_fastfetch_error_ ]] && return
+  
   _ascii_art_dir_="$output"
-  if [[ "$ASCII_DIMENSION_HEIGHT" == *[!$' \t\r\n']* ]] && [[ "$ASCII_DIMENSION_WIDTH" == *[!$' \t\r\n']* ]] ; then
-    local dimension_output="${output}_${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+
+  if [[ "$ASCII_DIMENSION_HEIGHT_MIN" == *[!$' \t\r\n']* ]] && [[ "$ASCII_DIMENSION_WIDTH_MIN" == *[!$' \t\r\n']* ]] ; then
+    local dimension_output="${_ascii_art_dir_}_min_${ASCII_DIMENSION_HEIGHT_MIN}x${ASCII_DIMENSION_WIDTH_MIN}"
     [[ -d "$dimension_output" ]] || {
-      echo "filtering  : ${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+      echo "filtering min  : ${ASCII_DIMENSION_HEIGHT_MIN}x${ASCII_DIMENSION_WIDTH_MIN}"
       mkdir -p "$dimension_output.temp"
       local saved=0
       local total="$( ls "$output" | wc -l | cut -d ' ' -f1 )"
-      _dimension_filter | while IFS= read -r file; do
+      find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" >= ASCII_DIMENSION_HEIGHT_MIN )) && (( "${dimension[1]}" >= ASCII_DIMENSION_WIDTH_MIN )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
         file_name="${file##*/}"
         print -n -- "\r-> copying $file_name           "
         cp "$file" "$dimension_output.temp/$file_name"
@@ -123,6 +125,26 @@ _ascii_art_refresh_() {
     }
     _ascii_art_dir_="$dimension_output"
   fi
+
+  if [[ "$ASCII_DIMENSION_HEIGHT" == *[!$' \t\r\n']* ]] && [[ "$ASCII_DIMENSION_WIDTH" == *[!$' \t\r\n']* ]] ; then
+    local dimension_output="${_ascii_art_dir_}_max_${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+    [[ -d "$dimension_output" ]] || {
+      echo "filtering max  : ${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+      mkdir -p "$dimension_output.temp"
+      local saved=0
+      local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
+      find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" <= ASCII_DIMENSION_HEIGHT )) && (( "${dimension[1]}" <= ASCII_DIMENSION_WIDTH )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
+        file_name="${file##*/}"
+        print -n -- "\r-> copying $file_name           "
+        cp "$file" "$dimension_output.temp/$file_name"
+        ((saved++))
+      done
+      print -- "\rfiltered   : $saved/$total            \n"
+      mv "$dimension_output.temp" "$dimension_output"
+    }
+    _ascii_art_dir_="$dimension_output"
+  fi
+
 }
 
 :ascii-art-refresh() {
@@ -135,7 +157,10 @@ _ascii_art_refresh_() {
     echo "change query then \":ascii-art-refresh && :ascii-art-fastfetch\""
     return
   }
-  ls "$_ascii_art_dir_" | shuf -n 1 | tr '\n' '\0' | xargs -0 sh -c "cat \"$output/\$1\"" _ | fastfetch --file -
+  local random_art="$(ls "$_ascii_art_dir_" | shuf -n 1)"
+  echo "[modules/ascii-art-fastfetch] using dir : \"$_ascii_art_dir_\"" | debug
+  echo "[modules/ascii-art-fastfetch] using art : \"$random_art\"" | debug
+  cat "$_ascii_art_dir_/$random_art" | fastfetch --file -
 }
 
 _ascii_art_refresh_
