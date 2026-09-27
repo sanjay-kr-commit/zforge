@@ -3,6 +3,6 @@
 count="0"
 sort "$_dot_bootstrap_root_/config/module" | while read -r module; do
   count=$(($count+1))
-  echo "$count:$module:$( sha256sum "$_dot_bootstrap_root_/modules/$module" | awk '{ print $1}')" 
-done | sha256sum | awk '{ print $1 }'
+  echo "$count:$module:$( sha256sum "$_dot_bootstrap_root_/modules/$module" | awk '{ print $1}')"
+done | { [[ -v EMBED_FILE_ID_FOR_DEBUG ]] && echo "EMBED_FILE_ID_FOR_DEBUG"; cat; } | sha256sum | awk '{ print $1 }'
 unset count
