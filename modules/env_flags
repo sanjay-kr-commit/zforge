@@ -57,7 +57,7 @@ _env_modify_entry() {
 
 :env-flags() {
 
-  local _filePath_env_flag=$_dot_bootstrap_root_/config/public/env_flags/ENV_FLAGS
+  local _filePath_env_flag="$_dot_bootstrap_root_/config/public/env_flags/ENV_FLAGS"
   local _export_env_flag=0
 
   while ! [[ -z "$1" ]] && [[ "$1" =~ "^-" ]] ; do 
@@ -66,7 +66,7 @@ _env_modify_entry() {
         local _export_env_flag=1
       ;;
       -p) echo "-> private"
-        local _filePath_env_flag=$_dot_bootstrap_root_/config/private/env_flags/ENV_FLAGS
+        local _filePath_env_flag="$_dot_bootstrap_root_/config/private/env_flags/ENV_FLAGS"
       ;;
       *) echo invalid option $1 
       ;;
@@ -75,7 +75,8 @@ _env_modify_entry() {
   done
  
   if [[ $# == 0 ]] ; then 
-    nvim $_filePath_env_flag
+    nvim "$_filePath_env_flag"
+    source "$_filePath_env_flag"
     unset _filePath_env_flag
     unset _export_env_flag
     return
