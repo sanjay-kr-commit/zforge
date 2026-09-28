@@ -32,7 +32,7 @@ _enable_omz_plugins() {
   local RESET="\e[0m"
   local TICK="✓"
   local CROSS="✗"
-  local tmpfile=$(mktemp | sed -e 's#^/tmp#/dev/shm#g')
+  local tmpfile="/dev/shm/$(uuidgen)"
   set +m
   (
     local output=$(omz plugin list) &&
@@ -93,7 +93,7 @@ _enable_omz_plugins() {
   else
     _disable_omz_plugins $( echo $output | awk '{print $2}' )
   fi
-  source $_dot_bootstrap_root_/module/omz
+  rm "$tmpfile"
 }
 
 :omz-take-snapshot() {
