@@ -8,10 +8,10 @@ local hash="$( echo $module | awk -F ':' '{ print $3 }' )"
 
 echo "[generator/module] generation required for module $name" | debug
 
-[[ "$("$_dot_bootstrap_root_/runtime/analyzer/is_script_parsable" "$_dot_bootstrap_root_/modules/$name")" ]] || {
-  echo "[generator/module] script $name failed to load" | error
-  return
-}
+#[[ "$("$_dot_bootstrap_root_/runtime/analyzer/is_script_parsable" "$_dot_bootstrap_root_/modules/$name")" ]] || {
+#  echo "[generator/module] script $name failed to load" | error
+#  return
+#}
 
 priority="$( source "$_dot_bootstrap_root_/runtime/generator/helper/extract_priority" "$_dot_bootstrap_root_/modules/$name" )"
 
