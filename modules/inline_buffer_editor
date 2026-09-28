@@ -27,8 +27,8 @@
 }
 
 _inline_buffer_editor() {
-  [[ -f "/dev/shm/inline_zsh_buffer" ]] && rm "/dev/shm/inline_zsh_buffer"
-  echo "$BUFFER" > "/dev/shm/inline_zsh_buffer"
+  local inline_buffer="/dev/shm/inline_zsh_buffer_$(uuidgen)"
+  echo "$BUFFER" > "$inline_buffer"
   if [[ -v INLINE_BUFFER_EDITOR_ARGS ]] ; then 
     tmux display-popup \
       -x '#{cursor_x}' \
@@ -36,7 +36,7 @@ _inline_buffer_editor() {
       -w "$INLINE_BUFFER_EDITOR_WIDTH" \
       -h "$INLINE_BUFFER_EDITOR_HEIGHT" \
       -E \
-      "$INLINE_BUFFER_EDITOR" "/dev/shm/inline_zsh_buffer" "$INLINE_BUFFER_EDITOR_ARGS"
+      "$INLINE_BUFFER_EDITOR" "$inline_buffer" "$INLINE_BUFFER_EDITOR_ARGS"
   else 
     tmux display-popup \
       -x '#{cursor_x}' \
@@ -44,11 +44,11 @@ _inline_buffer_editor() {
       -w "$INLINE_BUFFER_EDITOR_WIDTH" \
       -h "$INLINE_BUFFER_EDITOR_HEIGHT" \
       -E \
-      "$INLINE_BUFFER_EDITOR" "/dev/shm/inline_zsh_buffer"
+      "$INLINE_BUFFER_EDITOR" "$inline_buffer"
   fi
-  BUFFER=$( cat "/dev/shm/inline_zsh_buffer" )
+  BUFFER=$( cat "$inline_buffer" )
   CURSOR=${#BUFFER}
-  rm "/dev/shm/inline_zsh_buffer"
+  rm "$inline_buffer"
 }
 
 zle -N _inline_buffer_editor
