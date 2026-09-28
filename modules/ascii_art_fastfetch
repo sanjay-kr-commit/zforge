@@ -97,7 +97,7 @@ _ascii_art_refresh_() {
   [[ -v "ALLOW_EXPLICIT_ASCII" ]] && output="${output}_explicit"
   [[ -f "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" ]] || touch "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries"
   
-  grep -qF "$escaped_search_query:" "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" && {
+  grep -q "^$escaped_search_query:" "$_dot_bootstrap_root_/generated/ascii_art_fastfetch/failed_queries" && {
     _ascii_art_fastfetch_error_="This query had no result : \"$ASCII_SEARCH_QUERY\""
     return
   
