@@ -8,7 +8,6 @@
 # @e->ASCII_DIMENSION_WIDTH_MIN
 # @d->env_flags
 # @f->USE_RAM_FOR_ASCII_ART_FASTFETCH
-# @nolazy
 
 [[ -v "ASCII_SEARCH_QUERY" ]] || {
   echo "ASCII_SEARCH_QUERY Not found"
