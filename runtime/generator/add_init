@@ -1,6 +1,7 @@
 #!/bin/env zsh
+cp "$_dot_bootstrap_root_/runtime/share/selected_snapshot" "$_dot_bootstrap_root_/generated/selected_snapshot"
 echo '#!/bin/env zsh
-export _zforge_active_snapshot_="$( tail -n1 "$_dot_bootstrap_root_/generated/snapshots" | cut -d":" -f1 )"
+source "$_dot_bootstrap_root_/generated/selected_snapshot"
 [[ -f "$_dot_bootstrap_root_/config/flags" ]] && {
   while read -r flag ; do
     [[ -z "$flag" ]] && continue
