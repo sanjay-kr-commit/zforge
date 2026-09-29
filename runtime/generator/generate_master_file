@@ -1,18 +1,18 @@
 #!/bin/env zsh
 
-[[ -f "$_dot_bootstrap_root_/generated/$_session_id_/master" ]] && rm "$_dot_bootstrap_root_/generated/$_session_id_/master"
+[[ -f "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master" ]] && rm "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
 while read -r module ; do
   local index="$( awk -F ':' '{ print $1 }' <<< "$module" )"
-  if [[ -f "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/nomerge" ]] ; then 
+  if [[ -f "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts/$index/nomerge" ]] ; then 
     echo "[generator/generate_master_file] skipping merge for $index" | debug
-    echo "source \"$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main\"" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
+    echo "source \"$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts/$index/main\"" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
   else
-    [[ -v EMBED_FILE_ID_FOR_DEBUG ]] && print -n -- "_zforge_module_$index" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
-    print -n -- "(){\n" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
-    cat "$_dot_bootstrap_root_/generated/$_session_id_/scripts/$index/main" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
-    print -n -- "}" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
-    [[ -v EMBED_FILE_ID_FOR_DEBUG ]] && print -n -- " ; _zforge_module_$index" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
-    print -n -- "\n" >> "$_dot_bootstrap_root_/generated/$_session_id_/master"
+    [[ -v EMBED_FILE_ID_FOR_DEBUG ]] && print -n -- "_zforge_module_$index" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
+    print -n -- "(){\n" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
+    cat "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts/$index/main" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
+    print -n -- "}" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
+    [[ -v EMBED_FILE_ID_FOR_DEBUG ]] && print -n -- " ; _zforge_module_$index" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
+    print -n -- "\n" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/master"
   fi
-done < "$_dot_bootstrap_root_/generated/$_session_id_/pmodule_priority_sorted_dependency_sorted"
+done < "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/pmodule_priority_sorted_dependency_sorted"
 state="${state}generate_master_file "

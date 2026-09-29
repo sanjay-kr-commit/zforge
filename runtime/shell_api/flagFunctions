@@ -30,7 +30,7 @@ _listFlags() {
       printf "${RED}${CROSS}${RESET} "
     fi
     echo "d: $dynamicflag"
-  done <"$_dot_bootstrap_root_/generated/$_zforge_active_snapshot_/flags"
+  done <"$_dot_bootstrap_root_/cache/generated/runtime/$_zforge_active_snapshot_/flags"
   unset _is_config_dynamicflags_
 }
 

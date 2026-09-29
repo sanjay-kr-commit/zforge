@@ -6,7 +6,7 @@ export _session_id_="$EPOCHREALTIME"
 if [[ -d "/dev/shm" ]] ; then
   export _log_dir_="/dev/shm/logger"
 else
-  export _log_dir_="$_dot_bootstrap_root_/generated/logger"
+  export _log_dir_="$_dot_bootstrap_root_/cache/generated/runtime/logger"
 fi
 
 # load runtime flags

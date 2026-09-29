@@ -1,4 +1,4 @@
 #!/bin/env zsh 
 
-echo "$_session_id_:$( source "$_dot_bootstrap_root_/runtime/generator/config_module_hash" )" >> "$_dot_bootstrap_root_/generated/snapshots"
+echo "$_session_id_:$( source "$_dot_bootstrap_root_/runtime/generator/config_module_hash" )" >> "$_dot_bootstrap_root_/cache/generated/runtime/snapshots"
 state="${state}publish_latest_snapshot_state "
