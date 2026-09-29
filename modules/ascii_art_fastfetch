@@ -132,6 +132,66 @@ _download_ascii_art() {
 
 }
 
+_lower_dimension_implementaion_() {
+  echo "filtering min  : ${ASCII_DIMENSION_HEIGHT_MIN}x${ASCII_DIMENSION_WIDTH_MIN}"
+  mkdir -p "$dimension_output.temp"
+  local saved=0
+  local total="$( ls "$output" | wc -l | cut -d ' ' -f1 )"
+  (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" >= ASCII_DIMENSION_HEIGHT_MIN )) && (( "${dimension[1]}" >= ASCII_DIMENSION_WIDTH_MIN )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
+    file_name="${file##*/}"
+    print -n -- "\r-> copying $file_name                          "
+    cp "$file" "$dimension_output.temp/$file_name"
+    ((saved++))
+  done
+  print -- "\rfiltered   : $saved/$total                        "
+  mv "$dimension_output.temp" "$dimension_output"
+}
+
+_upper_dimension_implementaion_() {
+  echo "filtering max  : ${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
+  mkdir -p "$dimension_output.temp"
+  local saved=0
+  local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
+  (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" <= ASCII_DIMENSION_HEIGHT )) && (( "${dimension[1]}" <= ASCII_DIMENSION_WIDTH )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
+    file_name="${file##*/}"
+    print -n -- "\r-> copying $file_name                          "
+    cp "$file" "$dimension_output.temp/$file_name"
+    ((saved++))
+  done
+  print -- "\rfiltered   : $saved/$total                          "
+  mv "$dimension_output.temp" "$dimension_output"
+}
+
+_lolcat_filter_implementation_() {
+  echo "filtering lolcat"
+  mkdir -p "$lolcat_filter_dir.temp"
+  local saved=0
+  local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
+  (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && ls "$_ascii_art_dir_" | grep -Po ".*(?=\.inverted)" | {local buff="$(cat)";echo "$buff"; sed -e 's#\(.*\)#\1.inverted#g' <<< "$buff"} | while IFS= read -r file; do
+    file_name="${file##*/}"
+    print -n -- "\r-> copying $file_name                          "
+    cp "$_ascii_art_dir_/$file" "$lolcat_filter_dir.temp/$file_name"
+    ((saved++))
+  done
+  print -- "\rfiltered   : $saved/$total                          "
+  mv "$lolcat_filter_dir.temp" "$lolcat_filter_dir"
+}
+
+_only_explicit_implementation_() {
+  echo "filtering only explicit"
+  mkdir -p "$only_explicit_filter.temp"
+  local saved=0
+  local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
+  (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && ls "$_ascii_art_dir_" | grep -F "_explicit.ascii" | while IFS= read -r file; do
+    file_name="${file##*/}"
+    print -n -- "\r-> copying $file_name                          "
+    cp "$_ascii_art_dir_/$file" "$only_explicit_filter.temp/$file_name"
+    ((saved++))
+  done
+  print -- "\rfiltered   : $saved/$total                          "
+  mv "$only_explicit_filter.temp" "$only_explicit_filter"
+}
+
 _ascii_art_refresh_() {
   [[ -d "$_dot_bootstrap_root_/generated/ascii_art_fastfetch" ]] || mkdir -p "$_dot_bootstrap_root_/generated/ascii_art_fastfetch"
   unset _ascii_art_fastfetch_error_
@@ -152,77 +212,25 @@ _ascii_art_refresh_() {
 
   if [[ "$ASCII_DIMENSION_HEIGHT_MIN" == *[!$' \t\r\n']* ]] && [[ "$ASCII_DIMENSION_WIDTH_MIN" == *[!$' \t\r\n']* ]] ; then
     local dimension_output="${_ascii_art_dir_}_min_${ASCII_DIMENSION_HEIGHT_MIN}x${ASCII_DIMENSION_WIDTH_MIN}"
-    [[ -d "$dimension_output" ]] || {
-      echo "filtering min  : ${ASCII_DIMENSION_HEIGHT_MIN}x${ASCII_DIMENSION_WIDTH_MIN}"
-      mkdir -p "$dimension_output.temp"
-      local saved=0
-      local total="$( ls "$output" | wc -l | cut -d ' ' -f1 )"
-      (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" >= ASCII_DIMENSION_HEIGHT_MIN )) && (( "${dimension[1]}" >= ASCII_DIMENSION_WIDTH_MIN )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
-        file_name="${file##*/}"
-        print -n -- "\r-> copying $file_name                          "
-        cp "$file" "$dimension_output.temp/$file_name"
-        ((saved++))
-      done
-      print -- "\rfiltered   : $saved/$total                        "
-      mv "$dimension_output.temp" "$dimension_output"
-    }
+    [[ -d "$dimension_output" ]] || _lower_dimension_implementaion_
     _ascii_art_dir_="$dimension_output"
   fi
 
   if [[ "$ASCII_DIMENSION_HEIGHT" == *[!$' \t\r\n']* ]] && [[ "$ASCII_DIMENSION_WIDTH" == *[!$' \t\r\n']* ]] ; then
     local dimension_output="${_ascii_art_dir_}_max_${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
-    [[ -d "$dimension_output" ]] || {
-      echo "filtering max  : ${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
-      mkdir -p "$dimension_output.temp"
-      local saved=0
-      local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
-      (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" <= ASCII_DIMENSION_HEIGHT )) && (( "${dimension[1]}" <= ASCII_DIMENSION_WIDTH )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
-        file_name="${file##*/}"
-        print -n -- "\r-> copying $file_name                          "
-        cp "$file" "$dimension_output.temp/$file_name"
-        ((saved++))
-      done
-      print -- "\rfiltered   : $saved/$total                          "
-      mv "$dimension_output.temp" "$dimension_output"
-    }
+    [[ -d "$dimension_output" ]] || _upper_dimension_implementaion_
     _ascii_art_dir_="$dimension_output"
   fi
 
   [[ -v LOLCAT_FOR_ASCII_ART_FASTFETCH ]] && {
     local lolcat_filter_dir="${_ascii_art_dir_}_LOLCAT"
-    [[ -d "$lolcat_filter_dir" ]] || {
-      echo "filtering lolcat"
-      mkdir -p "$lolcat_filter_dir.temp"
-      local saved=0
-      local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
-      (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && ls "$_ascii_art_dir_" | grep -Po ".*(?=\.inverted)" | {local buff="$(cat)";echo "$buff"; sed -e 's#\(.*\)#\1.inverted#g' <<< "$buff"} | while IFS= read -r file; do
-        file_name="${file##*/}"
-        print -n -- "\r-> copying $file_name                          "
-        cp "$_ascii_art_dir_/$file" "$lolcat_filter_dir.temp/$file_name"
-        ((saved++))
-      done
-      print -- "\rfiltered   : $saved/$total                          "
-      mv "$lolcat_filter_dir.temp" "$lolcat_filter_dir"
-    }
+    [[ -d "$lolcat_filter_dir" ]] || _lolcat_filter_implementation_
     _ascii_art_dir_="$lolcat_filter_dir"
   }
 
   [[ -v "ALLOW_EXPLICIT_ASCII" ]] && [[ -v ONLY_EXPLICIT_FOR_ASCII_ART_FASTFETCH ]] && {
     local only_explicit_filter="${_ascii_art_dir_}_ONLY_EXPLICIT"
-    [[ -d "$only_explicit_filter" ]] || {
-      echo "filtering only explicit"
-      mkdir -p "$only_explicit_filter.temp"
-      local saved=0
-      local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
-      (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && ls "$_ascii_art_dir_" | grep -F "_explicit.ascii" | while IFS= read -r file; do
-        file_name="${file##*/}"
-        print -n -- "\r-> copying $file_name                          "
-        cp "$_ascii_art_dir_/$file" "$only_explicit_filter.temp/$file_name"
-        ((saved++))
-      done
-      print -- "\rfiltered   : $saved/$total                          "
-      mv "$only_explicit_filter.temp" "$only_explicit_filter"
-    }
+    [[ -d "$only_explicit_filter" ]] || _only_explicit_implementation_
     _ascii_art_dir_="$only_explicit_filter"
   }
 
