@@ -3,13 +3,13 @@
 # @p-> 1002
 # @f-> USE_RAM_FOR_TEMP_ALIAS_FILE
 
-if [[ -f $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES  ]] ; then 
-  source $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES
+if [[ -f $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES  ]] ; then 
+  source $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES
   echo \[persistentAlias\] sourced STORED_ALIASES config file  | debug
 else
   echo \[persistentAlias\] no aliases found : STORED_ALIASES config file missing | warn
-  mkdir -p $_dot_bootstrap_root_/config/public/persistentAlias/
-  touch $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES
+  mkdir -p $_dot_bootstrap_root_/local/public/config/persistentAlias/
+  touch $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES
   echo \[persistentAlias\] created STORED_ALIASES config file  | warn
 fi
 
@@ -20,7 +20,7 @@ unalias() {
     echo "[persistentAlias] delete arg found $@" | debug
     delete=true 
   fi
-  local newAliasTempFile="$_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES_NEW"
+  local newAliasTempFile="$_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES_NEW"
   if [[ -v USE_RAM_FOR_TEMP_ALIAS_FILE ]] ; then
     newAliasTempFile="/dev/shm/persistentAlias/STORED_ALIASES_NEW"
   fi
@@ -57,8 +57,8 @@ unalias() {
       else
         echo $line >> $newAliasTempFile
       fi
-    done < $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES
-    mv $newAliasTempFile $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES
+    done < $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES
+    mv $newAliasTempFile $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES
     if [[ ! -z $oldAlias ]] ; then 
       echo \[persistentAlias\] "deleted alias $oldAlias" | debug
     fi
@@ -83,7 +83,7 @@ alias() {
     return
   fi
 
-  local newAliasTempFile="$_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES_NEW"
+  local newAliasTempFile="$_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES_NEW"
   
   if [[ -v USE_RAM_FOR_TEMP_ALIAS_FILE ]] ; then
     newAliasTempFile="/dev/shm/persistentAlias/STORED_ALIASES_NEW"
@@ -125,9 +125,9 @@ alias() {
       else
         echo $line >> $newAliasTempFile
       fi
-    done < $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES
+    done < $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES
     print -r -- "builtin alias ${(q)arg}" >> $newAliasTempFile
-    mv $newAliasTempFile $_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES
+    mv $newAliasTempFile $_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES
     if [[ -z $oldAlias ]] ; then 
       echo \[persistentAlias\] "added new alias builtin alias ${(q)arg}" | debug
     else
@@ -140,7 +140,7 @@ alias() {
   local selected alias_name
 
   selected=$(
-    grep "alias \+[^=]\+" "$_dot_bootstrap_root_/config/public/persistentAlias/STORED_ALIASES" |
+    grep "alias \+[^=]\+" "$_dot_bootstrap_root_/local/public/config/persistentAlias/STORED_ALIASES" |
     fzf \
       --preview-window=wrap \
       --preview 'echo {} | bat --decorations=never --language=zsh --color=always'
