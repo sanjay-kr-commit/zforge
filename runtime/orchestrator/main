@@ -2,7 +2,7 @@
 
 local state=""
 
-if [[ -f "$_dot_bootstrap_root_/cache/generated/runtime/init" ]] && [[ ! -v _ZFORGE_FORCE_FOREGROUND_GENERATION ]] ; then
+if [[ -f "$_dot_bootstrap_root_/cache/generated/runtime/snapshots" ]] && (( "${#$(cat "$_dot_bootstrap_root_/cache/generated/runtime/snapshots" | tr '\n' ' ' | sed 's/ //g')}" )) && [[ ! -v _ZFORGE_FORCE_FOREGROUND_GENERATION ]] ; then
   [[ -v "FREEZE_BACKGROUND_VALIDATION" ]] && {
     echo  "[orchestrator/main] BACKGROUND VALIDATION IS FROZEN" | debug
     echo  "[orchestrator/main] disable flag FREEZE_BACKGROUND_VALIDATION for background validation" | debug

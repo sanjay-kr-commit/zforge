@@ -1,10 +1,32 @@
 #!/bin/env zsh
 
+hash_digest=""
+
+sort "$_dot_bootstrap_root_/runtime/share/bootflags_generation_sensitive" | while read -r bootflag; do
+  [[ -z "$bootflag" ]] && continue
+  [[ -v "$bootflag" ]] && hash_digest+=$'\n'"$bootflag"
+done
+
+find "$_dot_bootstrap_root_/runtime" -type f | {
+  local buff=$(cat)
+  grep -Po ".+(?=IGNORE_FINGERPRINTING)" <<< "$buff" | while read -r ignored_path ; do
+    local mod_buff="$( grep -vF "$ignored_path" <<< "$buff" )"
+    buff="$mod_buff"
+  done
+  echo "$buff"
+} | sort | while read -r runtime_file; do
+  hash_digest+=$'\n'"$runtime_file:$( sha256sum "$runtime_file" | cut -d ' ' -f1 )"
+done
+
 count="0"
+
 sort "$_dot_bootstrap_root_/local/public/runtime/module" | while read -r module; do
   [[ -z "$module" ]] && continue
   [[ -f "$_dot_bootstrap_root_/modules/$module" ]] || continue
   count=$(($count+1))
-  echo "$count:$module:$( sha256sum "$_dot_bootstrap_root_/modules/$module" | awk '{ print $1}')"
-done | { [[ -v EMBED_FILE_ID_FOR_DEBUG ]] && echo "EMBED_FILE_ID_FOR_DEBUG"; cat; } | sha256sum | awk '{ print $1 }'
-unset count
+  hash_digest+=$'\n'"$count:$module:$( sha256sum "$_dot_bootstrap_root_/modules/$module" | cut -d ' ' -f1 )"
+done
+
+sha256sum <<< "$hash_digest" | cut -d ' ' -f1
+
+unset count hash_digest

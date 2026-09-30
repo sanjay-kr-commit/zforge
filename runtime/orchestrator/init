@@ -18,8 +18,8 @@ modules_arr=(
   "$_dot_bootstrap_root_/runtime/generator/publish_latest_snapshot_state"
 )
 
-for module in ${modules_arr[@]} ; do 
-  source $module
+for module in ${modules_arr[@]} ; do
+  source "$module"
   [[ -z $generation_error ]] || {
     echo "[orchestrator/init] module generation failed" | error
     echo "[orchestrator/init] at $module" | error
