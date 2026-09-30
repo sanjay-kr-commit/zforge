@@ -1,0 +1,375 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.9"
+# dependencies = ["pymupdf", "fonttools"]
+# ///
+"""
+pdf-refont — replace every font used in a PDF with a single chosen font
+that is installed on this machine.
+
+USAGE
+    pdf-refont INPUT.pdf [-o OUTPUT.pdf] [--font "Font Name"] [--font-dir DIR ...]
+
+ARGUMENTS
+    INPUT.pdf
+        The PDF to process (required, positional).
+
+    -o, --output OUTPUT.pdf
+        Where to write the result. Defaults to:
+            <input-stem>.<font-name-slug>.pdf
+        e.g. main.pdf + "Times New Roman" -> main.Times-New-Roman.pdf
+
+    --font "Font Name"
+        Exact family name of an installed font to use (e.g. "Times New
+        Roman", "Arial", "Georgia"). If omitted, an interactive fzf
+        picker opens listing every font family found on the machine.
+        Exits with an error if the given name doesn't match any
+        installed font.
+
+    --font-dir DIR
+        Extra directory to search for fonts, in addition to the normal
+        OS font locations. Can be passed multiple times.
+
+    --help
+        Show this message.
+
+INSTALL (so it works from anywhere as `pdf-refont`)
+    chmod +x pdf-refont
+    mv pdf-refont ~/.local/bin/        # any directory already on your PATH
+    # make sure `uv` is installed and ~/.local/bin is on PATH
+
+REQUIREMENTS
+    - uv (https://docs.astral.sh/uv/) — handles the Python deps automatically
+    - fzf (https://github.com/junegunn/fzf) — only needed if you don't pass --font
+    - pv (https://www.ivarch.com/programs/pv.shtml) — optional; if installed,
+      a live progress bar is shown while pages are processed. Falls back to
+      plain text progress if pv isn't found.
+
+CAVEATS
+    Text is removed via redaction (a white box is painted behind it before
+    the new font is drawn), so text sitting directly on a colored
+    background or image will get a white patch behind it. Glyphs not
+    present in the chosen font are skipped with a warning rather than
+    crashing the whole run.
+"""
+
+import argparse
+import platform
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import pymupdf as fitz
+from fontTools.ttLib import TTFont
+
+FONT_EXTS = (".ttf", ".otf", ".ttc")
+CSI = "\x1b["
+
+
+def default_font_dirs() -> list[Path]:
+    system = platform.system()
+    if system == "Windows":
+        return [Path(r"C:\Windows\Fonts")]
+    if system == "Darwin":
+        return [
+            Path("/System/Library/Fonts"),
+            Path("/System/Library/Fonts/Supplemental"),
+            Path("/Library/Fonts"),
+            Path.home() / "Library/Fonts",
+        ]
+    # Linux / other
+    return [
+        Path("/usr/share/fonts"),
+        Path("/usr/local/share/fonts"),
+        Path.home() / ".fonts",
+        Path.home() / ".local/share/fonts",
+    ]
+
+
+def read_font_record(path: Path):
+    """Return (family_name, is_bold, is_italic) or None if unreadable."""
+    try:
+        tt = TTFont(path, lazy=True, fontNumber=0)
+        name_table = tt["name"]
+        family = name_table.getDebugName(16) or name_table.getDebugName(1)
+        if not family:
+            return None
+        bold = italic = False
+        if "head" in tt:
+            mac_style = tt["head"].macStyle
+            bold = bool(mac_style & 0b01)
+            italic = bool(mac_style & 0b10)
+        return family.strip(), bold, italic
+    except Exception:
+        return None
+
+
+def discover_fonts(extra_dirs: list[str]) -> dict[str, dict]:
+    """
+    Scan font directories and return:
+        { lowercase_family_name: {
+              "display": original-case family name,
+              "regular": Path or None,
+              "bold": Path or None,
+              "italic": Path or None,
+              "bolditalic": Path or None,
+          } }
+    """
+    dirs = default_font_dirs() + [Path(d) for d in extra_dirs]
+    fonts: dict[str, dict] = {}
+
+    for d in dirs:
+        if not d.exists():
+            continue
+        for path in d.rglob("*"):
+            if path.suffix.lower() not in FONT_EXTS or not path.is_file():
+                continue
+            record = read_font_record(path)
+            if not record:
+                continue
+            family, bold, italic = record
+            key = family.lower()
+            entry = fonts.setdefault(
+                key,
+                {"display": family, "regular": None, "bold": None,
+                 "italic": None, "bolditalic": None},
+            )
+            if bold and italic:
+                variant = "bolditalic"
+            elif bold:
+                variant = "bold"
+            elif italic:
+                variant = "italic"
+            else:
+                variant = "regular"
+            entry.setdefault(variant, None)
+            if entry[variant] is None:
+                entry[variant] = path
+
+    return fonts
+
+
+def pick_font_with_fzf(fonts: dict[str, dict]) -> str:
+    display_names = sorted({v["display"] for v in fonts.values()})
+    try:
+        result = subprocess.run(
+            ["fzf", "--prompt=Select font> "],
+            input="\n".join(display_names),
+            capture_output=True,
+            text=True,
+        )
+    except FileNotFoundError:
+        sys.exit(
+            "fzf not found. Install fzf, or specify a font directly with --font \"Font Name\"."
+        )
+
+    selection = result.stdout.strip()
+    if result.returncode != 0 or not selection:
+        sys.exit("No font selected.")
+    return selection
+
+
+def resolve_font(name: str, fonts: dict[str, dict]) -> dict:
+    entry = fonts.get(name.lower())
+    if entry is None:
+        sys.exit(f"font not found: {name}")
+    if entry["regular"] is None:
+        # use whatever variant exists as a stand-in for "regular"
+        for variant in ("bold", "italic", "bolditalic"):
+            if entry[variant] is not None:
+                entry["regular"] = entry[variant]
+                break
+    for variant in ("bold", "italic", "bolditalic"):
+        if entry[variant] is None:
+            entry[variant] = entry["regular"]
+    return entry
+
+
+def variant_for_flags(flags: int) -> str:
+    bold = bool(flags & 2**4)
+    italic = bool(flags & 2**1)
+    if bold and italic:
+        return "bolditalic"
+    if bold:
+        return "bold"
+    if italic:
+        return "italic"
+    return "regular"
+
+
+def int_to_rgb(color: int) -> tuple[float, float, float]:
+    r = ((color >> 16) & 255) / 255
+    g = ((color >> 8) & 255) / 255
+    b = (color & 255) / 255
+    return (r, g, b)
+
+
+def slugify(name: str) -> str:
+    return re.sub(r"\s+", "-", name.strip())
+
+
+def start_pv(total_pages: int):
+    """
+    Spawn `pv -l -s total_pages` to render a progress bar on the terminal.
+    We feed it one line per finished page via its stdin; pv counts lines
+    (thanks to -l) against the known total (-s) and draws the bar on
+    stderr, discarding the passed-through data to /dev/null.
+    Returns None if pv isn't installed, so callers can fall back.
+    """
+    if not shutil.which("pv"):
+        return None
+    return subprocess.Popen(
+        ["pv", "-l", "-s", str(total_pages), "-N", "pages"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
+    )
+
+
+def process(input_path: Path, output_path: Path, font_entry: dict) -> None:
+    doc = fitz.open(input_path)
+    alias = {
+        "regular": "REFONT",
+        "bold": "REFONT-Bold",
+        "italic": "REFONT-Italic",
+        "bolditalic": "REFONT-BoldItalic",
+    }
+
+    total_pages = len(doc)
+    pv_available = shutil.which("pv") is not None
+    use_ansi = sys.stdout.isatty()
+    two_line_mode = pv_available and use_ansi
+
+    if two_line_mode:
+        # Reserve two blank lines: line A (ours, redrawn via \r) sits above
+        # line B, which is left for pv to redraw its own bar into. Cursor
+        # is parked at the start of line B before pv is spawned, so pv's
+        # first redraw lands there instead of wherever output previously
+        # left the cursor.
+        sys.stdout.write("\n\n" + CSI + "2A" + CSI + "1B\r")
+        sys.stdout.flush()
+
+    pv_proc = start_pv(total_pages) if pv_available else None
+    if pv_proc is None:
+        print("(pv not found — falling back to plain progress output)")
+
+    for page_num, page in enumerate(doc, start=1):
+        page_dict = page.get_text("dict")
+        spans_to_redraw = []
+
+        for block in page_dict["blocks"]:
+            if block.get("type") != 0:
+                continue
+            for line in block["lines"]:
+                for span in line["spans"]:
+                    if not span["text"].strip():
+                        continue
+                    spans_to_redraw.append(span)
+                    page.add_redact_annot(span["bbox"], fill=(1, 1, 1))
+
+        if spans_to_redraw:
+            page.apply_redactions()
+
+            for style, path in font_entry.items():
+                if style not in alias:
+                    continue
+                page.insert_font(fontname=alias[style], fontfile=str(path))
+
+            warned = False
+            for span in spans_to_redraw:
+                style = variant_for_flags(span["flags"])
+                x, y = span["origin"]
+                try:
+                    page.insert_text(
+                        (x, y),
+                        span["text"],
+                        fontsize=span["size"],
+                        fontname=alias[style],
+                        color=int_to_rgb(span["color"]),
+                        render_mode=0,
+                    )
+                except Exception as e:
+                    if not warned:
+                        print(f"  [page {page_num}] warning: {e}")
+                        warned = True
+
+        if two_line_mode:
+            sys.stdout.write(
+                CSI + "1A\r" + CSI + "2K"
+                + f"Processed page {page_num}/{total_pages}"
+                + CSI + "1B\r"
+            )
+            sys.stdout.flush()
+        else:
+            print(f"\rProcessed page {page_num}/{total_pages}   ", end="", flush=True)
+
+        if pv_proc is not None:
+            pv_proc.stdin.write(b"1\n")
+            pv_proc.stdin.flush()
+
+    if pv_proc is not None:
+        pv_proc.stdin.close()
+        pv_proc.wait()
+
+    if two_line_mode:
+        sys.stdout.write(CSI + "1B\n")
+        sys.stdout.flush()
+    else:
+        print()
+
+    doc.save(output_path, garbage=4, deflate=True)
+    doc.close()
+    print(f"Saved: {output_path}")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        prog="pdf-refont",
+        description="Replace every font in a PDF with a single installed font.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=__doc__,
+    )
+    parser.add_argument("input", help="Input PDF file")
+    parser.add_argument("-o", "--output", default=None, help="Output PDF path")
+    parser.add_argument(
+        "--font", default=None,
+        help='Exact installed font family name, e.g. "Times New Roman". '
+             "If omitted, opens an fzf picker.",
+    )
+    parser.add_argument(
+        "--font-dir", action="append", default=[],
+        help="Extra directory to search for fonts (repeatable).",
+    )
+    args = parser.parse_args()
+
+    input_path = Path(args.input)
+    if not input_path.exists():
+        sys.exit(f"Input file not found: {input_path}")
+
+    fonts = discover_fonts(args.font_dir)
+    if not fonts:
+        sys.exit("No fonts found on this machine. Pass --font-dir to point at a font folder.")
+
+    if args.font:
+        font_name = args.font
+    else:
+        font_name = pick_font_with_fzf(fonts)
+
+    font_entry = resolve_font(font_name, fonts)
+    display_name = font_entry["display"]
+
+    output_path = (
+        Path(args.output) if args.output
+        else input_path.with_name(f"{input_path.stem}-{slugify(display_name)}.pdf")
+    )
+
+    print(f"Using font: {display_name}")
+    for style in ("regular", "bold", "italic", "bolditalic"):
+        print(f"  {style:11s} -> {font_entry[style]}")
+
+    process(input_path, output_path, font_entry)
+
+
+if __name__ == "__main__":
+    main()

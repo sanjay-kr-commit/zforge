@@ -3,15 +3,16 @@
 [[ -d "$_dot_bootstrap_root_/cache" ]] && return
 
 chmod -R +x "$_dot_bootstrap_root_/runtime"
-mkdir -p "$_dot_bootstrap_root_/cache/generated/zforge"
+
+# directories
+mkdir -p "$_dot_bootstrap_root_/cache/generated/runtime"
 mkdir -p "$_dot_bootstrap_root_/local/public/config"
 mkdir -p "$_dot_bootstrap_root_/local/private/config"
 mkdir -p "$_dot_bootstrap_root_/local/public/static_config"
 mkdir -p "$_dot_bootstrap_root_/local/private/static_config"
+mkdir -p "$_dot_bootstrap_root_/local/public/config"
+mkdir -p "$_dot_bootstrap_root_/local/private/config"
+mkdir -p "$_dot_bootstrap_root_/local/public/runtime"
 
-mkdir -p "$_dot_bootstrap_root_/config/public" "$_dot_bootstrap_root_/config/private"
-touch "$_dot_bootstrap_root_/config/module"
-#for _f in module bootflags flags ; do
-#  [[ -f "$_dot_bootstrap_root_/config/$_f" ]] || : > "$_dot_bootstrap_root_/config/$_f"
-#done
-#unset _f
+# files
+touch "$_dot_bootstrap_root_/local/public/runtime/module"

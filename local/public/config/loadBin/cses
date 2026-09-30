@@ -1,0 +1,73 @@
+#!/bin/bash
+
+if (( $# < 2 )) ; then
+  echo "2 args required"
+  exit 
+fi
+
+echo "-> program file : $1"
+echo "-> testing zip  : $2"
+echo
+
+files=""
+c=0
+for i in $@ ; do 
+  c=$(( c+1 ))
+  if (( $c > 2 )) ; then
+    files="$files $i.in"
+  fi
+done 
+
+fifo=$(mktemp -u)
+mkfifo "$fifo"
+trap 'rm -f "$fifo"' EXIT
+
+exec 3<>"$fifo"
+
+buff=""
+tle=""
+invalid=""
+c=0 
+total_test=0
+passes_test=0
+while IFS= read -r line <&3; do
+  if [[ $line == "-> exit loop" ]] ; then 
+    echo "-> passed $passes_test/$total_test"
+    break 
+  elif [[ "$line" == "-> testing"* ]]; then
+    echo -n "$line"
+  elif [[ $line == "-> end" ]] ; then
+    if [[ -z $tle && -z $invalid ]] ; then
+      echo "::passed"
+      passes_test=$((passes_test+1))
+    else
+      echo "::failed"
+      buff="${buff#$'\n'}"
+      buff="${buff#$'\n'}"
+      printf '%s\n' "$buff"
+      echo
+    fi
+    total_test=$((total_test+1))
+    buff=""
+    tle=""
+    invalid=""
+    c=0
+  else
+    if [[ $c > 0 && $c < 4 && $tle == "" ]] ; then 
+      tle="$(echo $line | grep -v "0m0")"
+    fi
+    if [[ $c == 4 ]] ; then 
+      invalid=$line
+    fi
+    c=$(( c+1 ))
+    buff+=$'\n'"$line"
+  fi
+done &
+
+zeros=$(unzip -l "$2" $files | grep -o "[0-9]\+\.in" | grep -o "[0-9]\+" | xargs -n1 sh -c 'echo $1 | wc -c' _ | sort -n | tail -n 1 )
+zeros=$((zeros-1))
+
+gcc "$1" && unzip -l "$2" $files | grep -o "[0-9]\+\.in" | grep -o "[0-9]\+" | sort -n | xargs -n1 bash -c 'printf "%s%0$2d\n" "-> testing " $3 ;output=$(time ./a.out < <(unzip -p "$1" "$3.in" )); if [[ $output != $( unzip -p "$1" "$3.out" ) ]] ; then echo "-> test failed" && echo "-> expected" && unzip -p "$1" "$3.out" && echo "-> output" && echo "$output" ; fi && echo "-> end"' _ "$2" "$zeros" 2>&3 >&3
+
+echo "-> exit loop" >&3
+wait

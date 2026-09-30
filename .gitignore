@@ -1,6 +1,4 @@
-config/private
-config/private/*
-config/static_config/private
-config/static_config/private/*
-generated
-generated/*
+cache
+cache/*
+local/private
+local/private/*

@@ -1,0 +1,46 @@
+builtin alias xclip='xclip -selection c'
+builtin alias :q='exit'
+builtin alias tmux='/usr/bin/tmux -u'
+builtin alias :s='poweroff'
+builtin alias :r='reboot'
+builtin alias gitRemove='git rm --cached'
+builtin alias :i='nvim .'
+builtin alias removeOrphanPackages='sudo pacman -Rns $(pacman -Qdtq)'
+builtin alias removePackageCache='paccache -r && paccache -ruk0'
+builtin alias removeOldJournalEntries='journalctl --vacuum-time=4weeks'
+builtin alias :si='sudo nvim .'
+builtin alias pull='git pull'
+builtin alias :c='clear'
+builtin alias :p='git pull'
+builtin alias pythonPackageRebuild='yay -S $(yay -Qoq /usr/lib/"$(readlink /usr/bin/"$(readlink /usr/bin/python)" )") --answerclean All --noconfirm'
+builtin alias packageSearch='yay -F'
+builtin alias updatePackageContentDatabase='yay -Fy'
+builtin alias qdbusviewer='/usr/lib/qt6/bin/qdbusviewer'
+builtin alias kill-session='tmux kill-session -t'
+builtin alias toggleNightColor='/usr/bin/qdbus6 org.kde.kglobalaccel /component/kwin invokeShortcut "Toggle Night Color"'
+builtin alias open='xdg-open'
+builtin alias btop='btop --force-utf'
+builtin alias :l='nvim leetcode.nvim'
+builtin alias :v='nvim'
+builtin alias :sv='sudoedit'
+builtin alias downmp3='yt-dlp --audio-format mp3 -x'
+builtin alias lastCommand=" tail -n1 ~/.zsh_history | grep -o \";.*\" | sed -e 's/;//g'"
+builtin alias update-initramfs='sudo dracut --force --hostonly --no-hostonly-cmdline /boot/initramfs-linux.img $(uname -r)'
+builtin alias today='nvim ~/Documents/Obsidian/Daily\ Logs/$(date +%Y-%m-%d).md'
+builtin alias :t='today'
+builtin alias :o='nvim ~/Documents/Obsidian/Homepage.md'
+builtin alias lsm='ls -la | awk  "{ printf \$0 ; printf \" \" ; printf (\$5/1024)/1024 ; print \"\" }"'
+builtin alias searchwiki='echo -n "query: " && read -r query && query=$(echo $query | jq -sRr @uri | sed -e "s/%0A//g") && echo searching $query && redirectedPage=$(curl -Ls -o /dev/shm/content -w "%{url_effective}
+" https://wiki.archlinux.org/index.php\?limit\=1000000\&search\=$query) && if [[ $redirectedPage =~ ".*/title/.*" ]] ; then cat /dev/shm/content | html2text | nvim ; else cat /dev/shm/content | html2text | grep -o "\* *\[.*\] *(.*)" | grep -o "(.*)" | sed -e "s#(/#https://wiki.archlinux.org/#" -e "s/[()]//g" | grep -o "https[^ ]*" | fzf | xargs -I {} curl {} 2>/dev/null | html2text >/dev/shm/content && nvim /dev/shm/content ; fi && unset redirectedPage && unset query && rm /dev/shm/content'
+builtin alias send='selectedDevices="$(devices=$(kdeconnect-cli -a 2>/dev/shm/deviceCount) && deviceCount=$(grep -o "[0-9]*" /dev/shm/deviceCount) && if [[ $deviceCount == 0 ]] ; then echo no device found ; elif [[ $deviceCount == 1 ]] ; then echo $devices ; else echo $devices | fzf ; fi )" && kdeconnect-cli -d  $(echo $selectedDevices |  grep -o ": *[^ ]*" | grep -o " .*") --share '
+builtin alias push=git\ push
+builtin alias globurl=noglob\ urlglobber\
+builtin alias rebuildKwinPlugin=yay\ -S\ \$\(ls\ /usr/lib/qt6/plugins/kwin/effects/plugins\ \|\ xargs\ -I\ \{\}\ pacman\ -Qoq\ /usr/lib/qt6/plugins/kwin/effects/plugins/\{\}\)\ --rebuild\ --noconfirm
+builtin alias rsf=faillock\ --user\ \$USER\ --reset
+builtin alias updateMirror=sudo\ reflector\ --protocol\ https\ --verbose\ --latest\ 25\ --sort\ rate\ --save\ /etc/pacman.d/mirrorlist\ \&\&\ yay\ -Syyu
+builtin alias prettifyPWD=find\ \$\(pwd\)\ -type\ f\ \|\ while\ IFS=\ read\ -r\ file\;\ do\ pretify\ \"\$file\"\ \&\&\ echo\ \;done
+builtin alias liveserverstart=nvim\ --headless\ +\"LiveServerStart\"
+builtin alias prettify=nvim\ --headless\ +\"lua\ require\(\"conform\"\).format\(\)\"\ +wq
+builtin alias :ls=liveserverstart
+builtin alias rmf=\(\)\{\ chmod\ -R\ 777\ \"\$\*\"\ \&\&\ rm\ -r\ \"\$\*\"\ \}
+builtin alias :lz=lazygit

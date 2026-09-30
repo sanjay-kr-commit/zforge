@@ -8,10 +8,10 @@ _listFlags() {
   local CROSS="✗"
   # bootflags
   local _is_config_bootflags_=""
-  [[ -f "$_dot_bootstrap_root_/config/bootflags" ]] && local _is_config_bootflags_="1"
+  [[ -f "$_dot_bootstrap_root_/local/public/runtime/bootflags" ]] && local _is_config_bootflags_="1"
   while read -r bootflag; do
     [[ -z "$bootflag" ]] && continue
-    if [[ ! -z "$_is_config_bootflags_" && ! -z "$(grep -F "$bootflag" "$_dot_bootstrap_root_/config/bootflags")" ]] ; then
+    if [[ ! -z "$_is_config_bootflags_" && ! -z "$(grep -F "$bootflag" "$_dot_bootstrap_root_/local/public/runtime/bootflags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
@@ -21,10 +21,10 @@ _listFlags() {
   unset _is_config_bootflags_
   # dynamic flags
   local _is_config_dynamicflags_=""
-  [[ -f "$_dot_bootstrap_root_/config/flags" ]] && local _is_config_dynamicflags_="1"
+  [[ -f "$_dot_bootstrap_root_/local/public/runtime/flags" ]] && local _is_config_dynamicflags_="1"
   while read -r dynamicflag; do
     [[ -z "$dynamicflag" ]] && continue
-    if [[ ! -z "$_is_config_dynamicflags_" && ! -z "$(grep -F "$dynamicflag" "$_dot_bootstrap_root_/config/flags")" ]] ; then
+    if [[ ! -z "$_is_config_dynamicflags_" && ! -z "$(grep -F "$dynamicflag" "$_dot_bootstrap_root_/local/public/runtime/flags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
@@ -41,11 +41,11 @@ _listFlags() {
 _dot_flag_disable() {
   local flag="$( awk '{ print $2 }' <<< "$1" )"
   if [[ "$( awk '{ print $1 }' <<< "$1" )" == "b:" ]] ; then
-    awk "!/^$flag/" "$_dot_bootstrap_root_/config/bootflags" > "$_dot_bootstrap_root_/config/bootflags.temp"
-    mv "$_dot_bootstrap_root_/config/bootflags.temp" "$_dot_bootstrap_root_/config/bootflags"
+    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/bootflags" > "$_dot_bootstrap_root_/local/public/runtime/bootflags.temp"
+    mv "$_dot_bootstrap_root_/local/public/runtime/bootflags.temp" "$_dot_bootstrap_root_/local/public/runtime/bootflags"
   else
-    awk "!/^$flag/" "$_dot_bootstrap_root_/config/flags" > "$_dot_bootstrap_root_/config/flags.temp"
-    mv "$_dot_bootstrap_root_/config/flags.temp" "$_dot_bootstrap_root_/config/flags"
+    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/flags" > "$_dot_bootstrap_root_/local/public/runtime/flags.temp"
+    mv "$_dot_bootstrap_root_/local/public/runtime/flags.temp" "$_dot_bootstrap_root_/local/public/runtime/flags"
   fi
   eval "unset \"$flag\""
 }
@@ -53,9 +53,9 @@ _dot_flag_disable() {
 _dot_flag_enable() {
   local flag="$( awk '{ print $2 }' <<< "$1" )"
   if [[ "$( awk '{ print $1 }' <<< "$1" )" == "b:" ]] ; then
-    echo "$flag" >> "$_dot_bootstrap_root_/config/bootflags"
+    echo "$flag" >> "$_dot_bootstrap_root_/local/public/runtime/bootflags"
   else
-    echo "$flag" >> "$_dot_bootstrap_root_/config/flags"
+    echo "$flag" >> "$_dot_bootstrap_root_/local/public/runtime/flags"
   fi
   eval "export \"$flag\"=1"
 }

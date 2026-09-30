@@ -6,10 +6,10 @@ mkdir -p "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts"
 touch "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/pmodule"
 : > "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module.temp"
 count="0"
-sort "$_dot_bootstrap_root_/config/module" | while read -r module; do
+sort "$_dot_bootstrap_root_/local/public/runtime/module" | while read -r module; do
   [[ -z "$module" ]] && continue
   [[ -f "$_dot_bootstrap_root_/modules/$module" ]] || {
-    echo "[generator/module_list] module '$module' listed in config/module but missing in modules/ : skipping" | warn
+    echo "[generator/module_list] module '$module' listed in local/public/runtime/module but missing in modules/ : skipping" | warn
     continue
   }
   count=$(($count+1))

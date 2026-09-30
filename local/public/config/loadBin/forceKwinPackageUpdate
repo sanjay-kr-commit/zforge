@@ -1,0 +1,7 @@
+#!/bin/bash
+yay -S $(ls /usr/lib/qt6/plugins/kwin/effects/plugins |
+  xargs -I {} pacman -Qoq /usr/lib/qt6/plugins/kwin/effects/plugins/{}) --rebuild --noconfirm
+echo "-> Reloading plugins"
+ls /usr/lib/qt6/plugins/kwin/effects/plugins |
+  sed -e 's/.so//g' |
+  xargs -n1 sh -c 'qdbus6 org.kde.KWin /Effects unloadEffect $1 && qdbus6 org.kde.KWin /Effects loadEffect $1' _
