@@ -19,19 +19,30 @@ _listFlags() {
     echo "b: $bootflag"
   done <"$_dot_bootstrap_root_/runtime/share/bootflags"
   unset _is_config_bootflags_
-  # dynamic flags
-  local _is_config_dynamicflags_=""
-  [[ -f "$_dot_bootstrap_root_/local/public/runtime/flags" ]] && local _is_config_dynamicflags_="1"
-  while read -r dynamicflag; do
-    [[ -z "$dynamicflag" ]] && continue
-    if [[ ! -z "$_is_config_dynamicflags_" && ! -z "$(grep -F "$dynamicflag" "$_dot_bootstrap_root_/local/public/runtime/flags")" ]] ; then
+  # shared logic between runtme and dynamic flag
+  local _is_dynamic_flags_=""
+  [[ -f "$_dot_bootstrap_root_/local/public/runtime/flags" ]] && local _is_dynamic_flags_="1"
+  # runtime dynamic flags
+  while read -r runtime_flag; do
+    [[ -z "$runtime_flag" ]] && continue
+    if [[ ! -z "$_is_dynamic_flags_" && ! -z "$(grep -F "$runtime_flag" "$_dot_bootstrap_root_/local/public/runtime/flags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
-    echo "d: $dynamicflag"
+    echo "r: $runtime_flag"
+  done <"$_dot_bootstrap_root_/runtime/share/flags"
+  # dynamic flags
+  while read -r dynamic_flag; do
+    [[ -z "$dynamic_flag" ]] && continue
+    if [[ ! -z "$_is_dynamic_flags_" && ! -z "$(grep -F "$dynamic_flag" "$_dot_bootstrap_root_/local/public/runtime/flags")" ]] ; then
+      printf "${GREEN}${TICK}${RESET} "
+    else
+      printf "${RED}${CROSS}${RESET} "
+    fi
+    echo "d: $dynamic_flag"
   done <"$_dot_bootstrap_root_/cache/generated/runtime/$_zforge_active_snapshot_/flags"
-  unset _is_config_dynamicflags_
+  unset _is_dynamic_flags_
 }
 
 :listFlags(){
@@ -39,20 +50,21 @@ _listFlags() {
 }
 
 _dot_flag_disable() {
-  local flag="$( awk '{ print $2 }' <<< "$1" )"
-  if [[ "$( awk '{ print $1 }' <<< "$1" )" == "b:" ]] ; then
-    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/bootflags" > "$_dot_bootstrap_root_/local/public/runtime/bootflags.temp"
-    mv "$_dot_bootstrap_root_/local/public/runtime/bootflags.temp" "$_dot_bootstrap_root_/local/public/runtime/bootflags"
+  local flag="$( cut -d ' ' -f2 <<< "$1" )"
+  local temp="$(uuidgen)"
+  if [[ "$( cut -d ' ' -f1 <<< "$1" )" == "b:" ]] ; then
+    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/bootflags" > "$_dot_bootstrap_root_/local/public/runtime/bootflags.$temp"
+    mv "$_dot_bootstrap_root_/local/public/runtime/bootflags.$temp" "$_dot_bootstrap_root_/local/public/runtime/bootflags"
   else
-    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/flags" > "$_dot_bootstrap_root_/local/public/runtime/flags.temp"
-    mv "$_dot_bootstrap_root_/local/public/runtime/flags.temp" "$_dot_bootstrap_root_/local/public/runtime/flags"
+    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/flags" > "$_dot_bootstrap_root_/local/public/runtime/flags.$temp"
+    mv "$_dot_bootstrap_root_/local/public/runtime/flags.$temp" "$_dot_bootstrap_root_/local/public/runtime/flags"
   fi
   eval "unset \"$flag\""
 }
 
 _dot_flag_enable() {
-  local flag="$( awk '{ print $2 }' <<< "$1" )"
-  if [[ "$( awk '{ print $1 }' <<< "$1" )" == "b:" ]] ; then
+  local flag="$( cut -d ' ' -f2 <<< "$1" )"
+  if [[ "$( cut -d ' ' -f1 <<< "$1" )" == "b:" ]] ; then
     echo "$flag" >> "$_dot_bootstrap_root_/local/public/runtime/bootflags"
   else
     echo "$flag" >> "$_dot_bootstrap_root_/local/public/runtime/flags"
