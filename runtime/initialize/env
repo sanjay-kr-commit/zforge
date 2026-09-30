@@ -10,9 +10,13 @@ else
 fi
 
 # load runtime flags
-[[ -f "$_dot_bootstrap_root_/config/bootflags" ]] && {
+if [[ -f "$_dot_bootstrap_root_/config/bootflags" ]] ; then
   while read -r flag ; do
     [[ -z "$flag" ]] && continue
     eval "export $flag=1"
   done <"$_dot_bootstrap_root_/config/bootflags"
-}
+else
+  # default flags
+  export LOGALL=1
+  export SILENT_LOG=1
+fi

@@ -5,7 +5,13 @@ local state=""
 if [[ -f "$_dot_bootstrap_root_/cache/generated/runtime/init" ]] && [[ ! -v _ZFORGE_FORCE_FOREGROUND_GENERATION ]] ; then
   local _orchestrator_main_start=$EPOCHREALTIME
   echo "[orchestrator/main] generated exists : revalidating in background" | debug 
-  source "$_dot_bootstrap_root_/runtime/orchestrator/init" &!
+  source "$_dot_bootstrap_root_/runtime/orchestrator/init" 2>&1 | {
+    local buff="$(cat)";
+    [[ -n "$buff" ]] && {
+      echo "[background generation output leaks]" | debug
+      print -- "$buff"                            | debug
+    }
+  } &!
 else
   [[ -v _orchestrator_main_start ]] && unset _orchestrator_main_start
   [[ -v LOGALL ]] || {

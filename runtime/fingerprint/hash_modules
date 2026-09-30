@@ -1,26 +1,26 @@
 #!/bin/env zsh
 
-[[ -f "$_dot_bootstrap_root_/cache/generated/runtime/init" && ! -z "$(grep "source" "$_dot_bootstrap_root_/cache/generated/runtime/init")" ]] && {
-  local activeSource="$(dirname -- $( grep "source" "$_dot_bootstrap_root_/cache/generated/runtime/init" | sed -e 's/^ *source *//g' ))"
-}
-
-[[ ! -v activeSource || ! -f $activeSource/module ]] && {
-  if [[ -v activeSource ]] ; then
-    echo "[fingerprint/hash_modules] activeSource is present but activeSource/module not found" | error
-  else
-    echo "[fingerprint/hash_modules] activeSource not found" | warn
-  fi
-  state="${state}hash_modules "
-  while read -r module ; do
-    source "$_dot_bootstrap_root_/runtime/generator/module"
-  done < "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module"
-  return
-}
+#[[ -f "$_dot_bootstrap_root_/cache/generated/runtime/init" && ! -z "$(grep "source" "$_dot_bootstrap_root_/cache/generated/runtime/init")" ]] && {
+#  local activeSource="$(dirname -- $( grep "source" "$_dot_bootstrap_root_/cache/generated/runtime/init" | sed -e 's/^ *source *//g' ))"
+#}
+#
+#[[ ! -v activeSource || ! -f $activeSource/module ]] && {
+#  if [[ -v activeSource ]] ; then
+#    echo "[fingerprint/hash_modules] activeSource is present but activeSource/module not found" | error
+#  else
+#    echo "[fingerprint/hash_modules] activeSource not found" | warn
+#  fi
+#  state="${state}hash_modules "
+#  while read -r module ; do
+#    source "$_dot_bootstrap_root_/runtime/generator/module"
+#  done < "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module"
+#  return
+#}
 
 local _hash_modules_state_change=""
 local _modified_modules=""
 while read -r module ; do
-  (( "$(source "$_dot_bootstrap_root_/runtime/fingerprint/helper/copy_module")" )) || {
+  #(( "$(source "$_dot_bootstrap_root_/runtime/fingerprint/helper/copy_module")" )) || {
     source "$_dot_bootstrap_root_/runtime/generator/module"
     _hash_modules_state_change="hash_modules"
     _modified_modules="$_modified_modules $module"
@@ -28,7 +28,7 @@ while read -r module ; do
       echo "[fingerprint/hash_modules] generation_error detected for module $module" | debug
       return
     }
-  }
+  #}
 done < "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module"
 
 echo "[fingerprint/hash_modules] $_modified_modules" | debug

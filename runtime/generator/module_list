@@ -2,8 +2,16 @@
 
 [[ -d "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_" ]] || mkdir -p "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_"
 [[ -f "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module.temp" ]] && rm "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module.temp"
+mkdir -p "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts"
+touch "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/pmodule"
+: > "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module.temp"
 count="0"
 sort "$_dot_bootstrap_root_/config/module" | while read -r module; do
+  [[ -z "$module" ]] && continue
+  [[ -f "$_dot_bootstrap_root_/modules/$module" ]] || {
+    echo "[generator/module_list] module '$module' listed in config/module but missing in modules/ : skipping" | warn
+    continue
+  }
   count=$(($count+1))
   echo "$count:$module:$( sha256sum "$_dot_bootstrap_root_/modules/$module" | awk '{ print $1}')" >> "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module.temp"
 done
