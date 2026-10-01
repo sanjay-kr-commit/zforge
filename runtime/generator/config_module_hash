@@ -7,6 +7,12 @@ sort "$_zforge_root_/runtime/share/bootflags_generation_sensitive" | while read 
   [[ -v "$bootflag" ]] && hash_digest+=$'\n'"$bootflag"
 done
 
+[[ -f "$_zforge_root_/runtime/share/dependencies" ]] && {
+  hash_digest+=$'\n'"$_zforge_root_/runtime/share/dependencies:$(
+    grep -v "^#.*" "$_zforge_root_/runtime/share/dependencies" | sort | awk '{ print $1 }' | sha256sum | cut -d ' ' -f1
+  )"
+}
+
 find "$_zforge_root_/runtime" -type f | {
   local buff=$(cat)
   grep -Po ".+(?=IGNORE_FINGERPRINTING)" <<< "$buff" | while read -r ignored_path ; do

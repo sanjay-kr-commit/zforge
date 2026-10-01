@@ -2,6 +2,29 @@
 
 [[ -d "$_zforge_root_/cache" ]] && return
 
+unset _zforge_bootstrap_error_
+[[ -v LOGALL ]] || {
+  local _main_LOGALL_status=$SILENT_LOG
+  export LOGALL=1
+}
+[[ -v SILENT_LOG ]] && {
+  local _main_SILENT_LOG_status=$SILENT_LOG
+  unset SILENT_LOG
+}
+while IFS= read -r line; do
+  local command="$(cut -d ' ' -f1 <<< "$line" )"
+  [[ "$command" == \#* ]] && continue
+  if [[ "$(which "$command")" == "$command not found" ]] ; then
+    echo "missing dependency : $command" | error
+    export _zforge_bootstrap_error_="missing dependencies"
+  else
+    echo "found dependency : $command" | debug
+  fi
+done < <(grep -o "^[^ ]\+" "$_zforge_root_/runtime/share/dependencies")
+[[ -v _main_SILENT_LOG_status ]] && export SILENT_LOG="$_main_SILENT_LOG_status"
+[[ -v _main_LOGALL_status ]] && unset LOGALL
+[[ -v _zforge_bootstrap_error_ ]] && return
+
 chmod -R +x "$_zforge_root_/runtime"
 
 # directories

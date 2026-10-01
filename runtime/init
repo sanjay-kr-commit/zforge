@@ -7,6 +7,11 @@ source "$(dirname -- $(realpath ${(%):-%N}))/initialize/env"
 source "$_zforge_root_/runtime/initialize/init_logger"
 source "$_zforge_root_/runtime/initialize/first_boot_optimisation"
 
+[[ -v _zforge_bootstrap_error_ ]] && {
+  [[ "$ZSH_EVAL_CONTEXT" == "toplevel" ]] && exit
+  return
+}
+
 echo "root dir : $_zforge_root_" | debug
 echo "session id : $_session_id_" | debug
 
