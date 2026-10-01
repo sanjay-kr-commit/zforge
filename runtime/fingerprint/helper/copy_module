@@ -2,7 +2,7 @@
 
 # 1 -> generate
 
-[[ -d "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts" ]] || mkdir -p "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts"
+[[ -d "$_zforge_root_/cache/generated/runtime/$_session_id_/scripts" ]] || mkdir -p "$_zforge_root_/cache/generated/runtime/$_session_id_/scripts"
 
 local index="$( echo $module | awk -F ':' '{ print $1 }' )" 
 local name="$( echo $module | awk -F ':' '{ print $2 }' )"
@@ -27,7 +27,7 @@ echo "[fingerprint/helper/copy_module] $name oldHash : $oldHash" | debug
   return
 }
 
-cp -r "$activeSource/scripts/$oldIndex" "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts/$index" || {
+cp -r "$activeSource/scripts/$oldIndex" "$_zforge_root_/cache/generated/runtime/$_session_id_/scripts/$index" || {
   echo "[fingerprint/helper/copy_module] failed to copy $name" | error
   echo 0
   return

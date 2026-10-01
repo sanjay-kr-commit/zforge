@@ -12,7 +12,7 @@ if [[ ! -d "$HOME/.oh-my-zsh/custom/themes/powerlevel10k" ]] ; then
 fi
 
 if [[ ! -f "$HOME/.p10k.zsh" ]]; then
-  cp "$_dot_bootstrap_root_/local/public/static_config/omz/p10k.zsh" "$HOME/.p10k.zsh"
+  cp "$_zforge_root_/local/public/static_config/omz/p10k.zsh" "$HOME/.p10k.zsh"
 fi
 
 # If you come from bash you might have to change your $PATH.
@@ -88,8 +88,8 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 
-if [[ -d "$_dot_bootstrap_root_/local/public/config/omz_helper" && -f "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins" ]] ; then 
-  source "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins"
+if [[ -d "$_zforge_root_/local/public/config/omz_helper" && -f "$_zforge_root_/local/public/config/omz_helper/plugins" ]] ; then 
+  source "$_zforge_root_/local/public/config/omz_helper/plugins"
 else
   plugins=(git)
 fi

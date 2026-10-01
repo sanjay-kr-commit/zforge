@@ -3,19 +3,20 @@
 local generation_error=""
 
 modules_arr=(
-  "$_dot_bootstrap_root_/runtime/fingerprint/shell_api_stub"
-  "$_dot_bootstrap_root_/runtime/fingerprint/add_init"
-  "$_dot_bootstrap_root_/runtime/fingerprint/check_last_generation"
-  "$_dot_bootstrap_root_/runtime/fingerprint/module_list"
-  "$_dot_bootstrap_root_/runtime/fingerprint/hash_modules"
-  "$_dot_bootstrap_root_/runtime/fingerprint/verify_dependency_presence"
-  "$_dot_bootstrap_root_/runtime/generator/sort_priority"
-  "$_dot_bootstrap_root_/runtime/analyzer/check_circular_dependency"
-  "$_dot_bootstrap_root_/runtime/analyzer/check_priority_to_dependency_conflict"
-  "$_dot_bootstrap_root_/runtime/generator/sort_dependencies"
-  "$_dot_bootstrap_root_/runtime/generator/generate_master_file"
-  "$_dot_bootstrap_root_/runtime/generator/merge_flags"
-  "$_dot_bootstrap_root_/runtime/generator/publish_latest_snapshot_state"
+  "$_zforge_root_/runtime/fingerprint/shell_api_stub"
+  "$_zforge_root_/runtime/fingerprint/add_init"
+  "$_zforge_root_/runtime/fingerprint/check_last_generation"
+  "$_zforge_root_/runtime/fingerprint/module_list"
+  "$_zforge_root_/runtime/fingerprint/hash_modules"
+  "$_zforge_root_/runtime/fingerprint/verify_dependency_presence"
+  "$_zforge_root_/runtime/generator/sort_priority"
+  "$_zforge_root_/runtime/analyzer/check_circular_dependency"
+  "$_zforge_root_/runtime/analyzer/check_priority_to_dependency_conflict"
+  "$_zforge_root_/runtime/generator/sort_dependencies"
+  "$_zforge_root_/runtime/generator/generate_master_file"
+  "$_zforge_root_/runtime/generator/merge_flags"
+  "$_zforge_root_/runtime/generator/merge_env"
+  "$_zforge_root_/runtime/generator/publish_latest_snapshot_state"
 )
 
 for module in ${modules_arr[@]} ; do
@@ -38,14 +39,14 @@ done
 }
 
 [[ -z "$generation_error" ]] || {
-  source "$_dot_bootstrap_root_/runtime/generator/hash_failure"
+  source "$_zforge_root_/runtime/generator/hash_failure"
 }
 
 if [[ -z "$generation_error" && ! -z "$state" ]] ; then
   echo "[orchestrator/init] state changes : \"$state\"" | debug
 fi
 
-cp "$_log_dir_/$_session_id_" "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/generation_log"
+cp "$_log_dir_/$_session_id_" "$_zforge_root_/cache/generated/runtime/$_session_id_/generation_log"
 
 if [[ -v _orchestrator_main_start ]] ; then
   local _orchestrator_main_end=$EPOCHREALTIME

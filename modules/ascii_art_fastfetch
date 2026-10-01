@@ -29,12 +29,12 @@ _get_encoded_url() {
 }
 
 _download_ascii_art() {
-  [[ -f "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/cached_query" ]] || touch "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/cached_query"
-  cached_query="$( grep -F "$escaped_search_query:" "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/cached_query" | tail -n1 )"
+  [[ -f "$_zforge_root_/cache/generated/ascii_art_fastfetch/cached_query" ]] || touch "$_zforge_root_/cache/generated/ascii_art_fastfetch/cached_query"
+  cached_query="$( grep -F "$escaped_search_query:" "$_zforge_root_/cache/generated/ascii_art_fastfetch/cached_query" | tail -n1 )"
   if [[ -z "$cached_query" ]] ; then
     echo "cached query : false"
     encoded="$(_get_encoded_url)"
-    echo "$escaped_search_query:$encoded" >> "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/cached_query"
+    echo "$escaped_search_query:$encoded" >> "$_zforge_root_/cache/generated/ascii_art_fastfetch/cached_query"
   else
     echo "cached query : true"
     encoded="$( cut -d ':' -f2 <<< "$cached_query" )"
@@ -46,21 +46,21 @@ _download_ascii_art() {
     html="$path_dev_shm_prefix/$encoded.html"
     inversionMap="$path_dev_shm_prefix/inversionMap.py"
   else
-    html="$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/$encoded.html"
-    inversionMap="$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/inversionMap.py"
+    html="$_zforge_root_/cache/generated/ascii_art_fastfetch/$encoded.html"
+    inversionMap="$_zforge_root_/cache/generated/ascii_art_fastfetch/inversionMap.py"
   fi
   echo "search       : https://emojicombos.com/api/search?keyphrase=$encoded"
-  echo "encoded      : ${encoded/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "encoded      : ${encoded/#"$_zforge_root_"/\$_zforge_root_}"
   [[ "$encoded" == "https://emojidb.org/"* ]] && {
     _ascii_art_fastfetch_error_="No webpage found for this query : \"$ASCII_SEARCH_QUERY\""
-    echo "$escaped_search_query:" >> "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/failed_queries"
+    echo "$escaped_search_query:" >> "$_zforge_root_/cache/generated/ascii_art_fastfetch/failed_queries"
     return
   }
   echo "url          : $url"
-  echo "html         : ${html/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
-  echo "output       : ${output/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "html         : ${html/#"$_zforge_root_"/\$_zforge_root_}"
+  echo "output       : ${output/#"$_zforge_root_"/\$_zforge_root_}"
   echo "explicit     : $( if [[ -v "ALLOW_EXPLICIT_ASCII" ]] ; then echo true ; else echo false ; fi )"
-  echo "inversionMap : ${inversionMap/#"$_dot_bootstrap_root_"/\$_dot_bootstrap_root_}"
+  echo "inversionMap : ${inversionMap/#"$_zforge_root_"/\$_zforge_root_}"
   [[ -d "$output.temp" ]] || mkdir -p "$output.temp"
   [[ -f "$html" ]] || wget "$url" -O "$html"
   [[ -f "$html.trimmed" ]] || sed -e 's#^[[:space:]]\+\(<[[:space:]]*div\)#\1#g' "$html" > "$html.trimmed"
@@ -193,14 +193,14 @@ _only_explicit_implementation_() {
 }
 
 _ascii_art_refresh_() {
-  [[ -d "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch" ]] || mkdir -p "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch"
+  [[ -d "$_zforge_root_/cache/generated/ascii_art_fastfetch" ]] || mkdir -p "$_zforge_root_/cache/generated/ascii_art_fastfetch"
   unset _ascii_art_fastfetch_error_
   escaped_search_query=$(jq -rn --arg v "$ASCII_SEARCH_QUERY" '$v|@uri')
-  output="$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/$escaped_search_query"
+  output="$_zforge_root_/cache/generated/ascii_art_fastfetch/$escaped_search_query"
   [[ -v "ALLOW_EXPLICIT_ASCII" ]] && output="${output}_explicit"
-  [[ -f "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/failed_queries" ]] || touch "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/failed_queries"
+  [[ -f "$_zforge_root_/cache/generated/ascii_art_fastfetch/failed_queries" ]] || touch "$_zforge_root_/cache/generated/ascii_art_fastfetch/failed_queries"
   
-  grep -q "^$escaped_search_query:" "$_dot_bootstrap_root_/cache/generated/ascii_art_fastfetch/failed_queries" && {
+  grep -q "^$escaped_search_query:" "$_zforge_root_/cache/generated/ascii_art_fastfetch/failed_queries" && {
     _ascii_art_fastfetch_error_="This query had no result : \"$ASCII_SEARCH_QUERY\""
     return
   }

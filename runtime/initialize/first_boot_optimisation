@@ -1,18 +1,18 @@
 #!/bin/env zsh
 
-[[ -d "$_dot_bootstrap_root_/cache" ]] && return
+[[ -d "$_zforge_root_/cache" ]] && return
 
-chmod -R +x "$_dot_bootstrap_root_/runtime"
+chmod -R +x "$_zforge_root_/runtime"
 
 # directories
-mkdir -p "$_dot_bootstrap_root_/cache/generated/runtime"
-mkdir -p "$_dot_bootstrap_root_/local/public/config"
-mkdir -p "$_dot_bootstrap_root_/local/private/config"
-mkdir -p "$_dot_bootstrap_root_/local/public/static_config"
-mkdir -p "$_dot_bootstrap_root_/local/private/static_config"
-mkdir -p "$_dot_bootstrap_root_/local/public/config"
-mkdir -p "$_dot_bootstrap_root_/local/private/config"
-mkdir -p "$_dot_bootstrap_root_/local/public/runtime"
+mkdir -p "$_zforge_root_/cache/generated/runtime"
+mkdir -p "$_zforge_root_/local/public/config"
+mkdir -p "$_zforge_root_/local/private/config"
+mkdir -p "$_zforge_root_/local/public/static_config"
+mkdir -p "$_zforge_root_/local/private/static_config"
+mkdir -p "$_zforge_root_/local/public/config"
+mkdir -p "$_zforge_root_/local/private/config"
+mkdir -p "$_zforge_root_/local/public/runtime"
 
 # files
-touch "$_dot_bootstrap_root_/local/public/runtime/module"
+touch "$_zforge_root_/local/public/runtime/module"

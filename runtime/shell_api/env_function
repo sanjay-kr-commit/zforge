@@ -1,0 +1,5 @@
+#!/bin/zsh
+
+:list_env() {
+  [[ -f "$_zforge_root_/cache/generated/runtime/$_zforge_active_snapshot_/env" ]] cat "$_zforge_root_/cache/generated/runtime/$_zforge_active_snapshot_/env"
+}

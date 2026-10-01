@@ -1,6 +1,6 @@
 #!/bin/zsh
 
-_listFlags() {
+_list_flags() {
   local RED="\e[1;31m"
   local GREEN=$'\e[1;32m'
   local RESET="\e[0m"
@@ -8,56 +8,56 @@ _listFlags() {
   local CROSS="✗"
   # bootflags
   local _is_config_bootflags_=""
-  [[ -f "$_dot_bootstrap_root_/local/public/runtime/bootflags" ]] && local _is_config_bootflags_="1"
+  [[ -f "$_zforge_root_/local/public/runtime/bootflags" ]] && local _is_config_bootflags_="1"
   while read -r bootflag; do
     [[ -z "$bootflag" ]] && continue
-    if [[ ! -z "$_is_config_bootflags_" && ! -z "$(grep -F "$bootflag" "$_dot_bootstrap_root_/local/public/runtime/bootflags")" ]] ; then
+    if [[ ! -z "$_is_config_bootflags_" && ! -z "$(grep -F "$bootflag" "$_zforge_root_/local/public/runtime/bootflags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
     echo "b: $bootflag"
-  done <"$_dot_bootstrap_root_/runtime/share/bootflags"
+  done <"$_zforge_root_/runtime/share/bootflags"
   unset _is_config_bootflags_
   # shared logic between runtme and dynamic flag
   local _is_dynamic_flags_=""
-  [[ -f "$_dot_bootstrap_root_/local/public/runtime/flags" ]] && local _is_dynamic_flags_="1"
+  [[ -f "$_zforge_root_/local/public/runtime/flags" ]] && local _is_dynamic_flags_="1"
   # runtime dynamic flags
   while read -r runtime_flag; do
     [[ -z "$runtime_flag" ]] && continue
-    if [[ ! -z "$_is_dynamic_flags_" && ! -z "$(grep -F "$runtime_flag" "$_dot_bootstrap_root_/local/public/runtime/flags")" ]] ; then
+    if [[ ! -z "$_is_dynamic_flags_" && ! -z "$(grep -F "$runtime_flag" "$_zforge_root_/local/public/runtime/flags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
     echo "r: $runtime_flag"
-  done <"$_dot_bootstrap_root_/runtime/share/flags"
+  done <"$_zforge_root_/runtime/share/flags"
   # dynamic flags
   while read -r dynamic_flag; do
     [[ -z "$dynamic_flag" ]] && continue
-    if [[ ! -z "$_is_dynamic_flags_" && ! -z "$(grep -F "$dynamic_flag" "$_dot_bootstrap_root_/local/public/runtime/flags")" ]] ; then
+    if [[ ! -z "$_is_dynamic_flags_" && ! -z "$(grep -F "$dynamic_flag" "$_zforge_root_/local/public/runtime/flags")" ]] ; then
       printf "${GREEN}${TICK}${RESET} "
     else
       printf "${RED}${CROSS}${RESET} "
     fi
     echo "d: $dynamic_flag"
-  done <"$_dot_bootstrap_root_/cache/generated/runtime/$_zforge_active_snapshot_/flags"
+  done <"$_zforge_root_/cache/generated/runtime/$_zforge_active_snapshot_/flags"
   unset _is_dynamic_flags_
 }
 
-:listFlags(){
-  _listFlags | less
+:list_flags(){
+  _list_flags | less
 }
 
 _dot_flag_disable() {
   local flag="$( cut -d ' ' -f2 <<< "$1" )"
   local temp="$(uuidgen)"
   if [[ "$( cut -d ' ' -f1 <<< "$1" )" == "b:" ]] ; then
-    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/bootflags" > "$_dot_bootstrap_root_/local/public/runtime/bootflags.$temp"
-    mv "$_dot_bootstrap_root_/local/public/runtime/bootflags.$temp" "$_dot_bootstrap_root_/local/public/runtime/bootflags"
+    awk "!/^$flag/" "$_zforge_root_/local/public/runtime/bootflags" > "$_zforge_root_/local/public/runtime/bootflags.$temp"
+    mv "$_zforge_root_/local/public/runtime/bootflags.$temp" "$_zforge_root_/local/public/runtime/bootflags"
   else
-    awk "!/^$flag/" "$_dot_bootstrap_root_/local/public/runtime/flags" > "$_dot_bootstrap_root_/local/public/runtime/flags.$temp"
-    mv "$_dot_bootstrap_root_/local/public/runtime/flags.$temp" "$_dot_bootstrap_root_/local/public/runtime/flags"
+    awk "!/^$flag/" "$_zforge_root_/local/public/runtime/flags" > "$_zforge_root_/local/public/runtime/flags.$temp"
+    mv "$_zforge_root_/local/public/runtime/flags.$temp" "$_zforge_root_/local/public/runtime/flags"
   fi
   eval "unset \"$flag\""
 }
@@ -65,9 +65,9 @@ _dot_flag_disable() {
 _dot_flag_enable() {
   local flag="$( cut -d ' ' -f2 <<< "$1" )"
   if [[ "$( cut -d ' ' -f1 <<< "$1" )" == "b:" ]] ; then
-    echo "$flag" >> "$_dot_bootstrap_root_/local/public/runtime/bootflags"
+    echo "$flag" >> "$_zforge_root_/local/public/runtime/bootflags"
   else
-    echo "$flag" >> "$_dot_bootstrap_root_/local/public/runtime/flags"
+    echo "$flag" >> "$_zforge_root_/local/public/runtime/flags"
   fi
   eval "export \"$flag\"=1"
 }
@@ -77,7 +77,7 @@ _dot_flag_enable() {
   local RESET="\e[0m"
   local CROSS="✗"
   while true ; do
-    local output="$( _listFlags | {cat; echo "${RED}quit${RESET}" ;} | fzf --ansi)"
+    local output="$( _list_flags | {cat; echo "${RED}quit${RESET}" ;} | fzf --ansi)"
     if [[ "$output" == "" ]] || [[ "$output" == "quit" ]] ; then
       return
     fi

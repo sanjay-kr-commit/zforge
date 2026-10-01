@@ -1,15 +1,15 @@
 #!/bin/env zsh
 
-local _sort_priority_pmodule="$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/pmodule"
+local _sort_priority_pmodule="$_zforge_root_/cache/generated/runtime/$_session_id_/pmodule"
 local _sorted_priority_pmodule="$(
   grep -E '.+:-[0-9]+$' "$_sort_priority_pmodule" | sort -t: -k2,2n ;
   grep -E '.+:\?$' "$_sort_priority_pmodule" ;
   grep -E '.+:[0-9]+$' "$_sort_priority_pmodule" | sort -t: -k2,2n 
 )"
 if [[ -n "$_sorted_priority_pmodule" ]] ; then
-  print -r -- "$_sorted_priority_pmodule" > "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/pmodule_priority_sorted"
+  print -r -- "$_sorted_priority_pmodule" > "$_zforge_root_/cache/generated/runtime/$_session_id_/pmodule_priority_sorted"
 else
-  : > "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/pmodule_priority_sorted"
+  : > "$_zforge_root_/cache/generated/runtime/$_session_id_/pmodule_priority_sorted"
 fi
 unset _sorted_priority_pmodule _sort_priority_pmodule
 state="${state}sort_priority "

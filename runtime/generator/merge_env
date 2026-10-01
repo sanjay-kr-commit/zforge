@@ -1,0 +1,10 @@
+#!/bin/env zsh
+
+: > "$_zforge_root_/cache/generated/runtime/$_session_id_/env"
+
+while read -r env; do
+  cat "$env" >>  "$_zforge_root_/cache/generated/runtime/$_session_id_/env"
+done < <(
+  find "$_zforge_root_/cache/generated/runtime/$_session_id_/scripts" -name "env"
+)
+

@@ -1,28 +1,28 @@
 #!/bin/zsh
 
-if [[ ! -d "$_dot_bootstrap_root_/local/public/config/omz_helper" ]] ; then 
-  mkdir -p "$_dot_bootstrap_root_/local/public/config/omz_helper"
+if [[ ! -d "$_zforge_root_/local/public/config/omz_helper" ]] ; then 
+  mkdir -p "$_zforge_root_/local/public/config/omz_helper"
 fi
-if [[ ! -f "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins" ]] ; then 
-  if [[ -f  "$_dot_bootstrap_root_/local/public/static_config/omz_helper/plugins" ]] ; then 
-    cp  "$_dot_bootstrap_root_/local/public/static_config/omz_helper/plugins" "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins"
+if [[ ! -f "$_zforge_root_/local/public/config/omz_helper/plugins" ]] ; then 
+  if [[ -f  "$_zforge_root_/local/public/static_config/omz_helper/plugins" ]] ; then 
+    cp  "$_zforge_root_/local/public/static_config/omz_helper/plugins" "$_zforge_root_/local/public/config/omz_helper/plugins"
   else
-    echo "plugins=(" >> "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins"
-    echo ")" >> "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins"
+    echo "plugins=(" >> "$_zforge_root_/local/public/config/omz_helper/plugins"
+    echo ")" >> "$_zforge_root_/local/public/config/omz_helper/plugins"
   fi
 fi
 
 _disable_omz_plugins() {
   local tmpfile="$(mktemp | sed -e 's#^/tmp#/dev/shm#g')"
-  awk "!/^$1$/" "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins" > "$tmpfile"
-  mv "$tmpfile" "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins"
+  awk "!/^$1$/" "$_zforge_root_/local/public/config/omz_helper/plugins" > "$tmpfile"
+  mv "$tmpfile" "$_zforge_root_/local/public/config/omz_helper/plugins"
 }
 _enable_omz_plugins() {
   local tmpfile="$(mktemp | sed -e 's#^/tmp#/dev/shm#g')"
-  awk 'NR>1 { print prev } { prev=$0 }' "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins" > "$tmpfile"
+  awk 'NR>1 { print prev } { prev=$0 }' "$_zforge_root_/local/public/config/omz_helper/plugins" > "$tmpfile"
   echo "$1" >> "$tmpfile"
   echo ")" >> "$tmpfile"
-  mv "$tmpfile" "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins"
+  mv "$tmpfile" "$_zforge_root_/local/public/config/omz_helper/plugins"
 }
 
 :omz-plugins() {
@@ -96,14 +96,14 @@ _enable_omz_plugins() {
 }
 
 :omz-take-snapshot() {
-  if [[ ! -d "$_dot_bootstrap_root_local/public/static_config/omz_helper" ]] ; then
-    mkdir -p "$_dot_bootstrap_root_local/public/static_config/omz_helper"
+  if [[ ! -d "$_zforge_root_local/public/static_config/omz_helper" ]] ; then
+    mkdir -p "$_zforge_root_local/public/static_config/omz_helper"
   fi
-  cp "$_dot_bootstrap_root_/local/public/config/omz_helper/plugins" "$_dot_bootstrap_root_local/public/static_config/omz_helper/plugins"
+  cp "$_zforge_root_/local/public/config/omz_helper/plugins" "$_zforge_root_local/public/static_config/omz_helper/plugins"
 }
 
 :omz-delete-snapshot() {
-  if [[ -f "$_dot_bootstrap_root_local/public/static_config/omz_helper/plugins" ]] ; then
-    rm "$_dot_bootstrap_root_/local/public/static_config/omz_helper/plugins"
+  if [[ -f "$_zforge_root_local/public/static_config/omz_helper/plugins" ]] ; then
+    rm "$_zforge_root_/local/public/static_config/omz_helper/plugins"
   fi
 }

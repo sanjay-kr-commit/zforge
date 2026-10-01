@@ -1,9 +1,9 @@
 #!/bin/env zsh
 
-export _zforge_current_hash_="$( source "$_dot_bootstrap_root_/runtime/generator/config_module_hash" )"
+export _zforge_current_hash_="$( source "$_zforge_root_/runtime/generator/config_module_hash" )"
 
-[[ -f "$_dot_bootstrap_root_/cache/generated/runtime/failure_hash" ]] && {
-  failure_entry="$( grep "^${_zforge_current_hash_}:.\+" "$_dot_bootstrap_root_/cache/generated/runtime/failure_hash" )"
+[[ -f "$_zforge_root_/cache/generated/runtime/failure_hash" ]] && {
+  failure_entry="$( grep "^${_zforge_current_hash_}:.\+" "$_zforge_root_/cache/generated/runtime/failure_hash" )"
   [[ -z "$failure_entry" ]] || {
     echo "[fingerprint/check_last_generation] this snapshot has already failed previously : $( cut -d ":" -f2 <<< "$failure_entry" )" | error
     echo "[fingerprint/check_last_generation] current_Hash : '$_zforge_current_hash_' " | error
@@ -14,15 +14,15 @@ export _zforge_current_hash_="$( source "$_dot_bootstrap_root_/runtime/generator
   }
 }
 
-[[ -f "$_dot_bootstrap_root_/cache/generated/runtime/snapshots" ]] && {
-  snapshot_entry="$( grep "^.\+:$_zforge_current_hash_$" "$_dot_bootstrap_root_/cache/generated/runtime/snapshots" | tail -n1 )"
+[[ -f "$_zforge_root_/cache/generated/runtime/snapshots" ]] && {
+  snapshot_entry="$( grep "^.\+:$_zforge_current_hash_$" "$_zforge_root_/cache/generated/runtime/snapshots" | tail -n1 )"
   [[ -z "$snapshot_entry" ]] || {
     echo "[fingerprint/check_last_generation] no change to the module config : $( cut -d':' -f1 <<< "$snapshot_entry" )" | debug
     echo "[fingerprint/check_last_generation] current_Hash : '$_zforge_current_hash_' " | debug
     echo "[fingerprint/check_last_generation] past_generation : '$snapshot_entry' " | debug
-    tail -n1 "$_dot_bootstrap_root_/cache/generated/runtime/snapshots" | grep -Fq "$snapshot_entry" || {
+    tail -n1 "$_zforge_root_/cache/generated/runtime/snapshots" | grep -Fq "$snapshot_entry" || {
       echo "[fingerprint/check_last_generation] moving entry to tail" | debug
-      source "$_dot_bootstrap_root_/runtime/generator/reuse_snapshot"
+      source "$_zforge_root_/runtime/generator/reuse_snapshot"
     }
     export no_generation_required
   }

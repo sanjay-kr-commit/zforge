@@ -10,16 +10,16 @@
 
 [[ "$*" == *"--chmodx"* ]] && {
   echo "-> made everything executable"
-  chmod -R +x "$_dot_bootstrap_root_/runtime/"
+  chmod -R +x "$_zforge_root_/runtime/"
 }
 
 [[ "$*" == *"--generate"* ]] && {
   echo "-> generating new snapshot"
   export _ZFORGE_FORCE_FOREGROUND_GENERATION=1
   if [[ -z "$( grep -- "--generate \+--silent" <<< "$*" )" ]] ; then 
-    source "$_dot_bootstrap_root_/runtime/orchestrator/main"
+    source "$_zforge_root_/runtime/orchestrator/main"
   else
-    source "$_dot_bootstrap_root_/runtime/orchestrator/main" 2>&1 >/dev/null
+    source "$_zforge_root_/runtime/orchestrator/main" 2>&1 >/dev/null
   fi
   echo "-> generation task complete"
 }

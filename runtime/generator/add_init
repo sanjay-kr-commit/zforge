@@ -1,12 +1,12 @@
 #!/bin/env zsh
-cp "$_dot_bootstrap_root_/runtime/share/selected_snapshot" "$_dot_bootstrap_root_/cache/generated/runtime/selected_snapshot"
+cp "$_zforge_root_/runtime/share/selected_snapshot" "$_zforge_root_/cache/generated/runtime/selected_snapshot"
 echo '#!/bin/env zsh
-source "$_dot_bootstrap_root_/cache/generated/runtime/selected_snapshot"
-[[ -f "$_dot_bootstrap_root_/local/public/runtime/flags" ]] && {
+source "$_zforge_root_/cache/generated/runtime/selected_snapshot"
+[[ -f "$_zforge_root_/local/public/runtime/flags" ]] && {
   while read -r flag ; do
     [[ -z "$flag" ]] && continue
     eval "export $flag=1"
-  done <"$_dot_bootstrap_root_/local/public/runtime/flags"
+  done <"$_zforge_root_/local/public/runtime/flags"
 }
-source "$_dot_bootstrap_root_/cache/generated/runtime/$_zforge_active_snapshot_/master"
-' >> "$_dot_bootstrap_root_/cache/generated/runtime/init"
+source "$_zforge_root_/cache/generated/runtime/$_zforge_active_snapshot_/master"
+' >> "$_zforge_root_/cache/generated/runtime/init"

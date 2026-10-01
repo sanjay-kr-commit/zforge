@@ -14,7 +14,7 @@ fi
 if [[ -v _GIT_PASS_ACT_AS_ASKSCRIPT ]] ; then 
   case "$1" in
     *Username*) echo "$user_name" ;;
-    *Password*) echo "$( grep -o "$user_name.*" $_dot_bootstrap_root_/local/private/config/gitPass/userconfigs | awk '{print $3}' )" ;;
+    *Password*) echo "$( grep -o "$user_name.*" $_zforge_root_/local/private/config/gitPass/userconfigs | awk '{print $3}' )" ;;
   esac
   return
 fi
@@ -36,12 +36,12 @@ git() {
     sed -e 's#^[^/]*/##g' | \
     sed -e 's#/.*##g' )"
   local userconfig=""
-  if [[ -f $_dot_bootstrap_root_/local/private/config/gitPass/userconfigs ]] ; then
-    userconfig="$( grep "$user_name.*" $_dot_bootstrap_root_/local/private/config/gitPass/userconfigs )"
+  if [[ -f $_zforge_root_/local/private/config/gitPass/userconfigs ]] ; then
+    userconfig="$( grep "$user_name.*" $_zforge_root_/local/private/config/gitPass/userconfigs )"
   else
     echo \[gitPass\] userconfig not found creating empty file | error
-    mkdir -p $_dot_bootstrap_root_/local/private/config/gitPass
-    touch $_dot_bootstrap_root_/local/private/config/gitPass/userconfigs
+    mkdir -p $_zforge_root_/local/private/config/gitPass
+    touch $_zforge_root_/local/private/config/gitPass/userconfigs
   fi
   if [[ -z $userconfig ]] ; then 
     echo \[gitPass\] user config for $user_name not found executing git normally | error
@@ -78,14 +78,14 @@ git() {
   echo -n "Enter auth-key : "
   local authkey="$(read -se)"
   echo ""
-  awk "!/^$user_name .*/" "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs" > "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs_new"
-  echo "$user_name $user_email $authkey" >> "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs_new"
-  mv "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs_new" "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs"
+  awk "!/^$user_name .*/" "$_zforge_root_/local/private/config/gitPass/userconfigs" > "$_zforge_root_/local/private/config/gitPass/userconfigs_new"
+  echo "$user_name $user_email $authkey" >> "$_zforge_root_/local/private/config/gitPass/userconfigs_new"
+  mv "$_zforge_root_/local/private/config/gitPass/userconfigs_new" "$_zforge_root_/local/private/config/gitPass/userconfigs"
 }
 
 :listGitUser() {
   echo "username email auth-key\n" | \
-    cat - "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs" | \
+    cat - "$_zforge_root_/local/private/config/gitPass/userconfigs" | \
     awk '{
       printf "\033[32m%-25s\033[0m ", $1;
       printf "\033[33m%-25s\033[0m ", $2;
@@ -94,12 +94,12 @@ git() {
 }
 
 :removeGitUser() {
-  local output="$(cat "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs" | \
+  local output="$(cat "$_zforge_root_/local/private/config/gitPass/userconfigs" | \
     awk '{ print $1 }' | \
     fzf )"
   if [[ $output == "" ]] ; then 
     return 
   fi
-  awk "!/^$output .*/" "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs" > "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs_new"
-  mv "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs_new" "$_dot_bootstrap_root_/local/private/config/gitPass/userconfigs"
+  awk "!/^$output .*/" "$_zforge_root_/local/private/config/gitPass/userconfigs" > "$_zforge_root_/local/private/config/gitPass/userconfigs_new"
+  mv "$_zforge_root_/local/private/config/gitPass/userconfigs_new" "$_zforge_root_/local/private/config/gitPass/userconfigs"
 }

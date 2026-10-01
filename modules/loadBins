@@ -1,17 +1,17 @@
 #!/bin/zsh
 
-[[ -d "$_dot_bootstrap_root_/local/public/config/loadBin" ]] || {
-  mkdir -p "$_dot_bootstrap_root_/local/public/config/loadBin"
+[[ -d "$_zforge_root_/local/public/config/loadBin" ]] || {
+  mkdir -p "$_zforge_root_/local/public/config/loadBin"
   echo \[loadBin\] created path | debug
 }
 
-export PATH="$PATH:$_dot_bootstrap_root_/local/public/config/loadBin"
-echo \[loadBin\] loaded path "$_dot_bootstrap_root_/local/public/config/loadBin" | debug
+export PATH="$PATH:$_zforge_root_/local/public/config/loadBin"
+echo \[loadBin\] loaded path "$_zforge_root_/local/public/config/loadBin" | debug
 
-[[ -d "$_dot_bootstrap_root_/local/private/config/loadBin" ]] || {
-  mkdir -p "$_dot_bootstrap_root_/local/private/config/loadBin"
+[[ -d "$_zforge_root_/local/private/config/loadBin" ]] || {
+  mkdir -p "$_zforge_root_/local/private/config/loadBin"
   echo \[loadBin\] created path | debug
 }
 
-export PATH="$PATH:$_dot_bootstrap_root_/local/private/config/loadBin"
-echo \[loadBin\] loaded path "$_dot_bootstrap_root_/local/private/config/loadBin" | debug
+export PATH="$PATH:$_zforge_root_/local/private/config/loadBin"
+echo \[loadBin\] loaded path "$_zforge_root_/local/private/config/loadBin" | debug

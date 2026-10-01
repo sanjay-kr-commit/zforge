@@ -1,38 +1,38 @@
 #!/bin/env zsh
 
-[[ -f "$_dot_bootstrap_root_/local/public/runtime/module" ]] || {
+[[ -f "$_zforge_root_/local/public/runtime/module" ]] || {
   echo "[fingerprint/module_list] local/public/runtime/module not found generating an empty file" | warn
-  touch "$_dot_bootstrap_root_/local/public/runtime/module" 
+  touch "$_zforge_root_/local/public/runtime/module" 
   state="${state}module_list "
 }
 
-[[ -f "$_dot_bootstrap_root_/cache/generated/runtime/init" ]] || {
+[[ -f "$_zforge_root_/cache/generated/runtime/init" ]] || {
   echo "[fingerprint/module_list] generated/init not found invoking module_list generator" | warn
-  source "$_dot_bootstrap_root_/runtime/generator/module_list"
+  source "$_zforge_root_/runtime/generator/module_list"
   state="${state}module_list "
   return
 }
 
-grep -q "source" "$_dot_bootstrap_root_/cache/generated/runtime/init" || {
+grep -q "source" "$_zforge_root_/cache/generated/runtime/init" || {
   echo "[fingerprint/module_list] generated/init is empty invoking module_list generator" | warn
-  source "$_dot_bootstrap_root_/runtime/generator/module_list"
+  source "$_zforge_root_/runtime/generator/module_list"
   state="${state}module_list "
   return
 }
 
-local activeSource="$(dirname -- $( grep "source" "$_dot_bootstrap_root_/cache/generated/runtime/init" | sed -e 's/^ *source *//g' ))"
+local activeSource="$(dirname -- $( grep "source" "$_zforge_root_/cache/generated/runtime/init" | sed -e 's/^ *source *//g' ))"
 
 [[ -f "$activeSource/module" ]] || {
   echo "[fingerprint/module_list] generated/\$activeSource/module not found invoking module_list generator" | warn
-  source "$_dot_bootstrap_root_/runtime/generator/module_list"
+  source "$_zforge_root_/runtime/generator/module_list"
   state="${state}module_list "
   return
 }
 
-if [[ "$( sort "$_dot_bootstrap_root_/local/public/runtime/module")" == "$(awk -F ':' '{ print $2 }' "$activeSource/module" )" ]]; then
+if [[ "$( sort "$_zforge_root_/local/public/runtime/module")" == "$(awk -F ':' '{ print $2 }' "$activeSource/module" )" ]]; then
   echo "[fingerprint/module_list] local/public/runtime/module unchanged no action required" | debug
 else
   echo "[fingerprint/module_list] local/public/runtime/module hash been modified invoking module_list generator" | warn
-  source "$_dot_bootstrap_root_/runtime/generator/module_list"
+  source "$_zforge_root_/runtime/generator/module_list"
   state="${state}module_list "
 fi

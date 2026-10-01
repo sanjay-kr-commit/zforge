@@ -7,12 +7,12 @@ typeset -a mapKey
 typeset -A mapValue
 
 while read -r dependencies ; do 
-  moduleIndex="${dependencies#"$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts/"}"
+  moduleIndex="${dependencies#"$_zforge_root_/cache/generated/runtime/$_session_id_/scripts/"}"
   moduleIndex="${moduleIndex%/dependencies}"
-  moduleName="$( grep "^$moduleIndex:.*" "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/module" | awk -F ':' '{ print $2 }' )"
+  moduleName="$( grep "^$moduleIndex:.*" "$_zforge_root_/cache/generated/runtime/$_session_id_/module" | awk -F ':' '{ print $2 }' )"
   mapKey+=("$moduleName")
   mapValue[$moduleName]="$( cat "$dependencies" )"
-done < <( find "$_dot_bootstrap_root_/cache/generated/runtime/$_session_id_/scripts" -type f -name 'dependencies')
+done < <( find "$_zforge_root_/cache/generated/runtime/$_session_id_/scripts" -type f -name 'dependencies')
 
 local detectCycle() {
   echo "${detectCyclePath[@]}" | grep -q ":$1:" && {
