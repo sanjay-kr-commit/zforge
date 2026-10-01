@@ -1,15 +1,16 @@
 #!/bin/env zsh
 
+# @d->env_flags
+# @f->ASCII_ART_USE_SYMLINKS
+# @f->USE_RAM_FOR_ASCII_ART_FASTFETCH
+# @f->LOLCAT_FOR_ASCII_ART_FASTFETCH
+# @f->ONLY_EXPLICIT_FOR_ASCII_ART_FASTFETCH
 # @f->ALLOW_EXPLICIT_ASCII
 # @e->ASCII_SEARCH_QUERY
 # @e->ASCII_DIMENSION_HEIGHT
 # @e->ASCII_DIMENSION_WIDTH
 # @e->ASCII_DIMENSION_HEIGHT_MIN
 # @e->ASCII_DIMENSION_WIDTH_MIN
-# @d->env_flags
-# @f->USE_RAM_FOR_ASCII_ART_FASTFETCH
-# @f->LOLCAT_FOR_ASCII_ART_FASTFETCH
-# @f->ONLY_EXPLICIT_FOR_ASCII_ART_FASTFETCH
 
 [[ -v "ASCII_SEARCH_QUERY" ]] || {
   echo "ASCII_SEARCH_QUERY Not found"
@@ -61,7 +62,6 @@ _download_ascii_art() {
   echo "output       : ${output/#"$_zforge_root_"/\$_zforge_root_}"
   echo "explicit     : $( if [[ -v "ALLOW_EXPLICIT_ASCII" ]] ; then echo true ; else echo false ; fi )"
   echo "inversionMap : ${inversionMap/#"$_zforge_root_"/\$_zforge_root_}"
-  [[ -d "$output.temp" ]] || mkdir -p "$output.temp"
   [[ -f "$html" ]] || wget "$url" -O "$html"
   [[ -f "$html.trimmed" ]] || sed -e 's#^[[:space:]]\+\(<[[:space:]]*div\)#\1#g' "$html" > "$html.trimmed"
   [[ -f "$inversionMap" ]] || {
@@ -81,10 +81,24 @@ _download_ascii_art() {
     print -n -- "\r-> generated inversionMap     \n"
   }
 
+  local _ascii_art_non_explicit_dir="${output%_explicit}"
+  {
+    find "$( dirname "$_ascii_art_non_explicit_dir" )" -maxdepth 1 -type d | grep -E "${_ascii_art_non_explicit_dir##*/}(_explicit)?_[0-9A-Fa-f-]+_temp$" |
+      while read -r temp_path ; do
+        rm -r "$temp_path"
+      done
+  }
+
+  local _ascii_art_explicit_dir="${_ascii_art_non_explicit_dir}_explicit"
+  local uniqueness="$(uuidgen)"
+  local _ascii_art_non_explicit_dir="${_ascii_art_non_explicit_dir}_${uniqueness}"
+  local _ascii_art_explicit_dir="${_ascii_art_explicit_dir}_${uniqueness}"
+  mkdir -p "${_ascii_art_non_explicit_dir}_temp" "${_ascii_art_explicit_dir}_temp"
+
   elements=$(htmlq '.emoji-wrap' < "$html.trimmed" )
-  
+
   count=$(grep -Po '(?<=class=)"[^"]*emoji-wrap[^"]*"' "$html" | wc -l)
-  
+ 
   saved=0
   inverted_count=0
 
@@ -93,103 +107,113 @@ _download_ascii_art() {
     adult_art_encoded_data=$( print -r -- "$elements" | htmlq -a data-encoded-text ".emoji-wrap:nth-child($((i + 1))) .emojis")
     data_type=$( print -r -- "$elements" | htmlq -a data-type ".emoji-wrap:nth-child($((i + 1))) .emojis")
 
-    # Skip sensitive/explicit entries unless ALLOW_EXPLICIT_ASCII is set.
-    [[ ! -v "ALLOW_EXPLICIT_ASCII" ]] && [[ ! -z "$adult_art_encoded_data" ]] && {
-        print -n -- "\r-> extracting $((i + 1))/$count"
-        continue
-    }
-
     if [[ -z "$adult_art_encoded_data" ]] ; then
       normal_art=$( print -r -- "$elements" | htmlq -t ".emoji-wrap:nth-child($((i + 1))) ")
-      print -r -- "$normal_art" > "$output.temp/$saved.ascii"
-      output_art_file="$output.temp/$saved.ascii"
-      [[ "$data_type" == "dot_art" ]] && touch "$output.temp/${saved}.ascii.inverted"
-    else 
-      print -r -- "$adult_art_encoded_data" | base64 -d > "$output.temp/${saved}_explicit.ascii"
-      output_art_file="$output.temp/${saved}_explicit.ascii"
-      [[ "$data_type" == "dot_art" ]] && touch "$output.temp/${saved}_explicit.ascii.inverted"
+      print -r -- "$normal_art" > "${_ascii_art_explicit_dir}_temp/$saved.ascii"
+      [[ "$data_type" == "dot_art" ]] && touch "${_ascii_art_explicit_dir}_temp/${saved}.ascii.inverted"
+    else
+      print -r -- "$adult_art_encoded_data" | base64 -d > "${_ascii_art_explicit_dir}_temp/${saved}_explicit.ascii"
+      [[ "$data_type" == "dot_art" ]] && touch "${_ascii_art_explicit_dir}_temp/${saved}_explicit.ascii.inverted"
     fi
-  
+ 
     [[ "$data_type" == "dot_art" ]] && ((inverted_count++))
     ((saved++))
-
     print -n -- "\r-> extracting $((i + 1))/$count"
   done
 
-  print -- "\r-> extracted $saved/$count  "
+  print -- "\r-> extracted $saved/$count"
 
   while IFS= read -r file ; do
     print -n -- "\r-> inverting : $file                             "
-    "$inversionMap" "$output.temp/$file" > "$output.temp/$file.inverted"
-  done <<(ls "$output.temp" | grep -Po ".*(?=\.inverted)" )
+    "$inversionMap" "${_ascii_art_explicit_dir}_temp/$file" > "${_ascii_art_explicit_dir}_temp/$file.inverted"
+  done < <(ls "${_ascii_art_explicit_dir}_temp" | grep -Po ".*(?=\.inverted)" )
 
   [[ -v USE_RAM_FOR_ASCII_ART_FASTFETCH ]] && rm -r "$path_dev_shm_prefix"
   unset path_dev_shm_prefix
 
   print -- "\r-> inverted $inverted_count/$count                   "
   print -- "\r-> saved $(($inverted_count+$saved))                   "
-  mv "$output.temp" "$output"
 
+  local _ascii_art_migration_command_=(cp)
+  [[ -v ASCII_ART_USE_SYMLINKS ]] && _ascii_art_migration_command_=(ln)
+  while read -r file; do
+    ${_ascii_art_migration_command_[@]} "${_ascii_art_explicit_dir}_temp/$file" "${_ascii_art_non_explicit_dir}_temp/$file"
+  done < <( ls "${_ascii_art_explicit_dir}_temp" | grep -v "_explicit" )
+  mv "${_ascii_art_explicit_dir}_temp" "${_ascii_art_explicit_dir%"_$uniqueness"}"
+  mv "${_ascii_art_non_explicit_dir}_temp" "${_ascii_art_non_explicit_dir%"_$uniqueness"}"
+  unset _ascii_art_migration_command_ _ascii_art_non_explicit_dir _ascii_art_explicit_dir uniqueness
 }
 
 _lower_dimension_implementaion_() {
+  local _ascii_art_migration_command_=(cp)
+  [[ -v ASCII_ART_USE_SYMLINKS ]] && _ascii_art_migration_command_=(ln)
   echo "filtering min  : ${ASCII_DIMENSION_HEIGHT_MIN}x${ASCII_DIMENSION_WIDTH_MIN}"
   mkdir -p "$dimension_output.temp"
   local saved=0
   local total="$( ls "$output" | wc -l | cut -d ' ' -f1 )"
   (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" >= ASCII_DIMENSION_HEIGHT_MIN )) && (( "${dimension[1]}" >= ASCII_DIMENSION_WIDTH_MIN )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
     file_name="${file##*/}"
-    print -n -- "\r-> copying $file_name                          "
-    cp "$file" "$dimension_output.temp/$file_name"
+    print -n -- "\r-> ${_ascii_art_migration_command_[@]} $file_name                          "
+    ${_ascii_art_migration_command_[@]} "$file" "$dimension_output.temp/$file_name"
     ((saved++))
   done
   print -- "\rfiltered   : $saved/$total                        "
   mv "$dimension_output.temp" "$dimension_output"
+  unset _ascii_art_migration_command_
 }
 
 _upper_dimension_implementaion_() {
+  local _ascii_art_migration_command_=(cp)
+  [[ -v ASCII_ART_USE_SYMLINKS ]] && _ascii_art_migration_command_=(ln)
   echo "filtering max  : ${ASCII_DIMENSION_HEIGHT}x${ASCII_DIMENSION_WIDTH}"
   mkdir -p "$dimension_output.temp"
   local saved=0
   local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
   (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && find "$_ascii_art_dir_" -maxdepth 1 -type f -print0 | xargs -0 -n1 sh -c 'wc -l "$1" | cut -d " " -f1 | tr "\n" ":" ; awk "length > max { max = length } END { print max }" "$1" | tr "\n" ":" ; echo "$1"' _ | tr '\n' '\0' | xargs -0 -n1 sh -c 'dimension=() ; dimension[0]="$(echo "$1" | cut -d ':' -f1 )"; dimension[1]="$(echo "$1" | cut -d ':' -f2 )" ;  dimension[2]="$(echo "$1" | cut -d ':' -f3 )" ; if (( "${dimension[0]}" <= ASCII_DIMENSION_HEIGHT )) && (( "${dimension[1]}" <= ASCII_DIMENSION_WIDTH )) ; then echo "${dimension[2]}" ; fi' _ | while IFS= read -r file; do
     file_name="${file##*/}"
-    print -n -- "\r-> copying $file_name                          "
-    cp "$file" "$dimension_output.temp/$file_name"
+    print -n -- "\r-> ${_ascii_art_migration_command_[@]} $file_name                          "
+    ${_ascii_art_migration_command_[@]} "$file" "$dimension_output.temp/$file_name"
     ((saved++))
   done
   print -- "\rfiltered   : $saved/$total                          "
   mv "$dimension_output.temp" "$dimension_output"
+  unset _ascii_art_migration_command_
 }
 
 _lolcat_filter_implementation_() {
+  local _ascii_art_migration_command_=(cp)
+  [[ -v ASCII_ART_USE_SYMLINKS ]] && _ascii_art_migration_command_=(ln)
   echo "filtering lolcat"
   mkdir -p "$lolcat_filter_dir.temp"
   local saved=0
   local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
   (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && ls "$_ascii_art_dir_" | grep -Po ".*(?=\.inverted)" | {local buff="$(cat)";echo "$buff"; sed -e 's#\(.*\)#\1.inverted#g' <<< "$buff"} | while IFS= read -r file; do
     file_name="${file##*/}"
-    print -n -- "\r-> copying $file_name                          "
-    cp "$_ascii_art_dir_/$file" "$lolcat_filter_dir.temp/$file_name"
+    print -n -- "\r-> ${_ascii_art_migration_command_[@]} $file_name                          "
+    ${_ascii_art_migration_command_[@]} "$_ascii_art_dir_/$file" "$lolcat_filter_dir.temp/$file_name"
     ((saved++))
   done
   print -- "\rfiltered   : $saved/$total                          "
   mv "$lolcat_filter_dir.temp" "$lolcat_filter_dir"
+  unset _ascii_art_migration_command_
 }
 
 _only_explicit_implementation_() {
+  local _ascii_art_migration_command_=(cp)
+  [[ -v ASCII_ART_USE_SYMLINKS ]] && _ascii_art_migration_command_=(ln)
   echo "filtering only explicit"
   mkdir -p "$only_explicit_filter.temp"
   local saved=0
   local total="$( ls "$_ascii_art_dir_" | wc -l | cut -d ' ' -f1 )"
   (( "$(ls -l "$_ascii_art_dir_" | wc -l | {local buff="$(cat)"; ((buff--)); echo "$buff"})" > 1 )) && ls "$_ascii_art_dir_" | grep -F "_explicit.ascii" | while IFS= read -r file; do
     file_name="${file##*/}"
-    print -n -- "\r-> copying $file_name                          "
-    cp "$_ascii_art_dir_/$file" "$only_explicit_filter.temp/$file_name"
+    print -n -- "\r-> ${_ascii_art_migration_command_[@]} $file_name                          "
+    ${_ascii_art_migration_command_[@]} "$_ascii_art_dir_/$file" "$only_explicit_filter.temp/$file_name"
     ((saved++))
   done
   print -- "\rfiltered   : $saved/$total                          "
   mv "$only_explicit_filter.temp" "$only_explicit_filter"
+  unset _ascii_art_migration_command_
 }
 
 _ascii_art_refresh_() {
