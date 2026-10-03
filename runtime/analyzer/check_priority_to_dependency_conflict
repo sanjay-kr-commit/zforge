@@ -1,6 +1,6 @@
 #!/bin/env zsh
 
-while read -r dependencies ; do 
+while read -r dependencies ; do
   moduleIndex="${dependencies#"$_zforge_root_/cache/generated/runtime/$_session_id_/scripts/"}"
   moduleIndex="${moduleIndex%/dependencies}"
   moduleName="$(awk -F ':' '{ print $2 }' <<< "$(grep "^$moduleIndex:.\+:.\+" "$_zforge_root_/cache/generated/runtime/$_session_id_/module")")"
@@ -12,15 +12,14 @@ while read -r dependencies ; do
     dependencyPriority="$(awk -F ':' '{ print $2 }' <<< "$(grep "^$dependencyIndex:" "$_zforge_root_/cache/generated/runtime/$_session_id_/pmodule")")"
     [[ "$dependencyPriority" == "?" ]] && continue ;
     (( "$priority" < "$dependencyPriority" )) && {
-      echo "[analyzer/check_priority_to_dependency_conflict] dependency has greater priority then dependent" | error 
-      echo "[analyzer/check_priority_to_dependency_conflict] dependent  : $moduleIndex -> $priority" | error 
-      echo "[analyzer/check_priority_to_dependency_conflict] dependency : $dependencyIndex:$dependency -> $dependencyPriority" | error 
-      generation_error="[analyzer/check_priority_to_dependency_conflict] dependency has greater priority then dependent" | error 
+      echo "[analyzer/check_priority_to_dependency_conflict] dependency has greater priority then dependent" | error
+      echo "[analyzer/check_priority_to_dependency_conflict] dependent  : $moduleIndex -> $priority" | error
+      echo "[analyzer/check_priority_to_dependency_conflict] dependency : $dependencyIndex:$dependency -> $dependencyPriority" | error
+      generation_error="[analyzer/check_priority_to_dependency_conflict] dependency has greater priority then dependent"
+      error <<< "$generation_error"
       return
     }
-  done < "$dependencies" 
+  done < "$dependencies"
 done < <( find "$_zforge_root_/cache/generated/runtime/$_session_id_/scripts" -type f -name 'dependencies')
 
-
 state="${state}check_priority_to_dependency_conflict "
-
