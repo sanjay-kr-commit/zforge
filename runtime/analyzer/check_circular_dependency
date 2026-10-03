@@ -24,10 +24,13 @@ local detectCycle() {
   }
   detectCyclePath+=("-> :$1:")
   for dependentModule in ${(f)mapValue[$1]}; do
+    local -a detectCyclePath_local
+    detectCyclePath_local=("${detectCyclePath[@]}")
     detectCycle "$dependentModule"
     [[ -z "$generation_error" ]] || {
       return
     }
+    detectCyclePath=("${detectCyclePath_local[@]}")
   done
 }
 
