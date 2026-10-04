@@ -13,3 +13,4 @@ sudo_systemd_ask_pass
 z
 inline_buffer_editor
 ascii_art_fastfetch
+popup_editor_tmux

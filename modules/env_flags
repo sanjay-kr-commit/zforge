@@ -1,6 +1,7 @@
 #!/bin/zsh
 # @p -> -100
 # @f-> USE_RAM_FOR_TEMP_ENV_FILE
+# @e-> EDITOR
 
 if [[ -f "$_zforge_root_/local/public/config/env_flags/ENV_FLAGS"  ]] ; then
   source "$_zforge_root_/local/public/config/env_flags/ENV_FLAGS"
@@ -75,7 +76,18 @@ _env_modify_entry() {
   done
 
   if [[ $# == 0 ]] ; then
-    nvim "$_filePath_env_flag"
+    if (( $+functions[popup_editor_tmux] )); then
+      popup_editor_tmux "$_filePath_env_flag"
+      (( "$?" )) && {
+        "$EDITOR" "$_filePath_env_flag"
+      }
+    else
+      if [[ -v EDITOR ]] ; then 
+        "$EDITOR" "$_filePath_env_flag"
+      else
+        "nvim" "$_filePath_env_flag"
+      fi
+    fi
     source "$_filePath_env_flag"
     unset _filePath_env_flag
     unset _export_env_flag

@@ -1,50 +1,18 @@
 #!/bin/env zsh
 
-# @d->tmux_terminal
-# @e->INLINE_BUFFER_EDITOR
-# @e->INLINE_BUFFER_EDITOR_HEIGHT
-# @e->INLINE_BUFFER_EDITOR_WIDTH
-# @e->INLINE_BUFFER_EDITOR_ARGS
-
-[[ -v TMUX ]] || {
-  echo "[module/inline_buffer_editor] outside tmux enviroment" | error
-  return
-}
-
-[[ -v INLINE_BUFFER_EDITOR_WIDTH ]] || {
-  echo "[module/inline_buffer_editor] INLINE_BUFFER_EDITOR_WIDTH not set" | error
-  return
-}
-
-[[ -v INLINE_BUFFER_EDITOR_HEIGHT ]] || {
-  echo "[module/inline_buffer_editor] INLINE_BUFFER_EDITOR_HEIGHT not set" | error
-  return
-}
-
-[[ -v INLINE_BUFFER_EDITOR ]] || {
-  echo "[module/inline_buffer_editor] INLINE_BUFFER_EDITOR not set" | error
-  return
-}
+# @e->EDITOR
 
 _inline_buffer_editor() {
   local inline_buffer="/dev/shm/inline_zsh_buffer_$(uuidgen)"
   echo "$BUFFER" > "$inline_buffer"
-  if [[ -v INLINE_BUFFER_EDITOR_ARGS ]] ; then 
-    tmux display-popup \
-      -x '#{cursor_x}' \
-      -y '#{cursor_y}' \
-      -w "$INLINE_BUFFER_EDITOR_WIDTH" \
-      -h "$INLINE_BUFFER_EDITOR_HEIGHT" \
-      -E \
-      "$INLINE_BUFFER_EDITOR" "$inline_buffer" "$INLINE_BUFFER_EDITOR_ARGS"
-  else 
-    tmux display-popup \
-      -x '#{cursor_x}' \
-      -y '#{cursor_y}' \
-      -w "$INLINE_BUFFER_EDITOR_WIDTH" \
-      -h "$INLINE_BUFFER_EDITOR_HEIGHT" \
-      -E \
-      "$INLINE_BUFFER_EDITOR" "$inline_buffer"
+  if (( $+functions[popup_editor_tmux] )); then
+    popup_editor_tmux "$inline_buffer" 2>/dev/null >/dev/null
+    (( "$?" )) && {
+      "$EDITOR" "$inline_buffer"
+    }
+
+  else
+    "$EDITOR" "$inline_buffer"
   fi
   BUFFER=$( cat "$inline_buffer" )
   CURSOR=${#BUFFER}

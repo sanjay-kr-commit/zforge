@@ -1,0 +1,47 @@
+#!/usr/bin/env zsh
+
+# @d->tmux_terminal
+# @e->POPUP_EDITOR_TMUX
+# @e->POPUP_EDITOR_TMUX_HEIGHT
+# @e->POPUP_EDITOR_TMUX_WIDTH
+# @e->POPUP_EDITOR_TMUX_ARGS
+
+[[ -v TMUX ]] || {
+  echo "[module/popup_editor_tmux] outside tmux enviroment" | error
+  return
+}
+
+[[ -v POPUP_EDITOR_TMUX ]] || {
+  echo "[module/inline_buffer_editor] POPUP_EDITOR_TMUX not set" | error
+  return
+}
+
+[[ -v POPUP_EDITOR_TMUX_WIDTH ]] || {
+  echo "[module/inline_buffer_editor] POPUP_EDITOR_TMUX_WIDTH not set" | error
+  return
+}
+
+[[ -v POPUP_EDITOR_TMUX_HEIGHT ]] || {
+  echo "[module/inline_buffer_editor] POPUP_EDITOR_TMUX_HEIGHT not set" | error
+  return
+}
+
+popup_editor_tmux() {
+  if [[ -v POPUP_EDITOR_TMUX_ARGS ]] ; then
+    tmux display-popup \
+      -x '2' \
+      -y '#{cursor_y}' \
+      -w "$POPUP_EDITOR_TMUX_WIDTH" \
+      -h "$POPUP_EDITOR_TMUX_HEIGHT" \
+      -E \
+      "$POPUP_EDITOR_TMUX" "$@" "$POPUP_EDITOR_TMUX_ARGS"
+  else
+    tmux display-popup \
+      -x '2' \
+      -y '#{cursor_y}' \
+      -w "$POPUP_EDITOR_TMUX_WIDTH" \
+      -h "$POPUP_EDITOR_TMUX_HEIGHT" \
+      -E \
+      "$POPUP_EDITOR_TMUX" "$@"
+  fi
+}
