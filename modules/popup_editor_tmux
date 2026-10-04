@@ -4,6 +4,8 @@
 # @e->POPUP_EDITOR_TMUX
 # @e->POPUP_EDITOR_TMUX_HEIGHT
 # @e->POPUP_EDITOR_TMUX_WIDTH
+# @e->POPUP_EDITOR_TMUX_X_CURSOR
+# @e->POPUP_EDITOR_TMUX_Y_CURSOR
 # @e->POPUP_EDITOR_TMUX_ARGS
 
 [[ -v TMUX ]] || {
@@ -16,32 +18,36 @@
   return
 }
 
-[[ -v POPUP_EDITOR_TMUX_WIDTH ]] || {
-  echo "[module/inline_buffer_editor] POPUP_EDITOR_TMUX_WIDTH not set" | error
-  return
-}
-
-[[ -v POPUP_EDITOR_TMUX_HEIGHT ]] || {
-  echo "[module/inline_buffer_editor] POPUP_EDITOR_TMUX_HEIGHT not set" | error
-  return
-}
-
-popup_editor_tmux() {
-  if [[ -v POPUP_EDITOR_TMUX_ARGS ]] ; then
-    tmux display-popup \
-      -x '2' \
-      -y '#{cursor_y}' \
-      -w "$POPUP_EDITOR_TMUX_WIDTH" \
-      -h "$POPUP_EDITOR_TMUX_HEIGHT" \
-      -E \
-      "$POPUP_EDITOR_TMUX" "$@" "$POPUP_EDITOR_TMUX_ARGS"
+build_popup_tmux_editor(){
+ unset popup_editor_tmux
+  local popup_editor_tmux="popup_editor_tmux() {"
+  popup_editor_tmux+=$'\n'"  tmux display-popup \\"
+  if [[ -v POPUP_EDITOR_TMUX_X_CURSOR ]] ; then
+    popup_editor_tmux+=$'\n'"    -x \"\$POPUP_EDITOR_TMUX_X_CURSOR\" \\"
   else
-    tmux display-popup \
-      -x '2' \
-      -y '#{cursor_y}' \
-      -w "$POPUP_EDITOR_TMUX_WIDTH" \
-      -h "$POPUP_EDITOR_TMUX_HEIGHT" \
-      -E \
-      "$POPUP_EDITOR_TMUX" "$@"
+    popup_editor_tmux+=$'\n'"    -x '2' \\"
   fi
+  if [[ -v POPUP_EDITOR_TMUX_Y_CURSOR ]] ; then
+    popup_editor_tmux+=$'\n'"    -y \"\$POPUP_EDITOR_TMUX_Y_CURSOR\" \\"
+  else
+    popup_editor_tmux+=$'\n'"    -y '#{cursor_y}' \\"
+  fi
+  if [[ -v POPUP_EDITOR_TMUX_WIDTH ]]; then
+    popup_editor_tmux+=$'\n'"    -w \"\$POPUP_EDITOR_TMUX_WIDTH\" \\"
+  else
+    popup_editor_tmux+=$'\n'"    -w \"\$(tmux display -p '#{window_width}')\"  \\"
+  fi
+  [[ -v POPUP_EDITOR_TMUX_HEIGHT ]] && {
+    popup_editor_tmux+=$'\n'"    -h \"\$POPUP_EDITOR_TMUX_HEIGHT\" \\"
+  }
+  popup_editor_tmux+=$'\n'"    -E \\"
+  popup_editor_tmux+=$'\n'"    \"\$POPUP_EDITOR_TMUX\" \"\$@\""
+  [[ -v POPUP_EDITOR_TMUX_ARGS ]] && popup_editor_tmux+=$' '"\"\${(@s: :)POPUP_EDITOR_TMUX_ARGS}\""
+  popup_editor_tmux+=$'\n}'
+  print -- "[popup_editor_tmux] $popup_editor_tmux" | debug
+  eval "$popup_editor_tmux"
+  unset popup_editor_tmux
+
 }
+
+build_popup_tmux_editor
