@@ -42,7 +42,7 @@ build_popup_tmux_editor(){
   }
   popup_editor_tmux+=$'\n'"    -E \\"
   popup_editor_tmux+=$'\n'"    \"\$POPUP_EDITOR_TMUX\" \"\$@\""
-  [[ -v POPUP_EDITOR_TMUX_ARGS ]] && popup_editor_tmux+=$' '"\"\${(@s: :)POPUP_EDITOR_TMUX_ARGS}\""
+  [[ -v POPUP_EDITOR_TMUX_ARGS ]] && popup_editor_tmux+=$' '"\${(@z)POPUP_EDITOR_TMUX_ARGS}\""
   popup_editor_tmux+=$'\n}'
   print -- "[popup_editor_tmux] $popup_editor_tmux" | debug
   eval "$popup_editor_tmux"
